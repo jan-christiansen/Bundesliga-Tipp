@@ -1,0 +1,107 @@
+h1 {
+  text-align: center;
+}
+
+caption {
+    text-align: center;
+}
+
+.content {
+    margin: 25px 25px 25px 25px;
+}
+
+.cur-table {
+    left: 50%;
+    margin-left: -150px;
+    position: relative;
+}
+
+.bs-example {
+    width: 300px;
+    float: left;
+    position: relative;
+}
+
+.clear {
+    clear: both;
+}
+
+.better-1 {
+    background-color: rgb(0, 128, 0);
+}
+
+.better-2 {
+    background-color: rgb(0, 136, 0);
+}
+
+.better-3 {
+    background-color: rgb(0, 144, 0);
+}
+
+.better-4 {
+    background-color: rgb(0, 152, 0);
+}
+
+.better-5 {
+    background-color: rgb(0, 160, 0);
+}
+
+.better-6 {
+    background-color: rgb(0, 168, 0);
+}
+
+.better-7 {
+    background-color: rgb(0, 176, 0);
+}
+
+.better-8 {
+    background-color: rgb(0, 184, 0);
+}
+
+.better-9 {
+    background-color: rgb(0, 192, 0);
+}
+
+.better-10 {
+    background-color: rgb(0, 200, 0);
+}
+
+.worse-1 {
+    background-color: rgb(128, 0, 0);
+}
+
+.worse-2 {
+    background-color: rgb(136, 0, 0);
+}
+
+.worse-3 {
+    background-color: rgb(144, 0, 0);
+}
+
+.worse-4 {
+    background-color: rgb(152, 0, 0);
+}
+
+.worse-5 {
+    background-color: rgb(160, 0, 0);
+}
+
+.worse-6 {
+    background-color: rgb(168, 0, 0);
+}
+
+.worse-7 {
+    background-color: rgb(176, 0, 0);
+}
+
+.worse-8 {
+    background-color: rgb(184, 0, 0);
+}
+
+.worse-9 {
+    background-color: rgb(192, 0, 0);
+}
+
+.worse-10 {
+    background-color: rgb(200, 0, 0);
+}
