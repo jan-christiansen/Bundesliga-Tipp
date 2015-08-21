@@ -31,8 +31,3 @@ instance showPlayer :: Show Player where
 allPlayers :: Array Player
 allPlayers =
   [JanWulf, Jan, JR, Christoph, Johannes, Julia, Daniel, Mirko, Ulf, Sandra]
-
-type Entry = { player :: Player, points :: Int }
-
-entries :: Array Entry
-entries = map (\p -> { player: p, points: 0 }) allPlayers
