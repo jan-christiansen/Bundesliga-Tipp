@@ -109,7 +109,11 @@ ui = component render eval
  where
   render :: Render State Input p
   render st =
-    H.div_ [header st.player, tipTable (tipForPlayer st.player) st.matchday]
+    H.div [P.class_ (H.className "content")]
+      [ H.h1 [P.class_ (H.className "jumbotron")]
+        [H.text "Saison Spektakel 2015/16"]
+      , header st.player
+      , H.div [P.class_ (H.className "bs-example")] [tipTable (tipForPlayer st.player) st.matchday] ]
 
   eval :: Eval Input State Input (Aff AppEffects)
   eval (Click next) = do
@@ -117,11 +121,13 @@ ui = component render eval
 
 header :: forall p i. Player -> H.HTML p i
 header player =
-  H.div_ [H.text ("Spieler: " ++ (show player))]
+  H.h2_ [H.text ("Spieler: " ++ (show player))]
 
 tipTable :: forall p i. Array Team -> Array Team -> H.HTML p i
 tipTable tip matchday =
-  H.table_ (tipHeader : zipWith tipRow (range 1 (length tip)) tip)
+  H.table
+    [P.class_ (H.className "table")]
+    [H.thead_ [tipHeader], H.tbody_ (zipWith tipRow (range 1 (length tip)) tip)]
  where
   tipHeader = H.tr_ [H.th_ [H.text "#"], H.th_ [H.text "Verein"], H.th_ [H.text "Abstand"]]
   tipRow i team =
@@ -143,10 +149,12 @@ metric tip actual = tip - actual
   --      Just i  -> i
 
 rowColor :: forall i. Int -> H.Prop i
-rowColor i = P.class_ (H.className (colorName i))
+rowColor i = P.classes [H.className (trend i), H.className (dist i)]
  where
-  colorName i =
-    if i==0 then "correct" else if i>0 then "better-" ++ show i else "worse-" ++ show (negate i)
+  trend i = if i==0 then "correct" else if i>0 then "better" else "worse"
+  dist i = case fromNumber (abs (toNumber i)) of
+                Nothing -> ""
+                Just i  -> "dist-" ++ show i
 
 matchday :: Int -> Array Team
 matchday _ =
