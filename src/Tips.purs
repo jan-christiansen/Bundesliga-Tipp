@@ -12,6 +12,7 @@ import Math (abs)
 import Data.Int (toNumber, fromNumber)
 import Data.Array
 import Data.Maybe (Maybe(..))
+import Data.Either
 
 import Halogen
 import Halogen.Query.StateF (modify)
@@ -25,6 +26,7 @@ import Network.HTTP.Affjax (AJAX(), get)
 import Player
 import Team
 import Tip
+import Standings
 
 
 main :: Eff AppEffects Unit
@@ -36,10 +38,13 @@ main = launchAff $ do
 data Input a = Click a
 
 
-type State = { player :: Player,  matchday :: Array Team }
+data State =
+    Loading
+  | Error String
+  | State Player (Array Team)
 
 initialState :: State
-initialState = { player : Jan, matchday: matchday 1 }
+initialState = Loading
 
 
 type AppEffects = HalogenEffects (ajax :: AJAX)
@@ -48,15 +53,20 @@ ui :: forall eff p. Component State Input (Aff AppEffects) p
 ui = component render eval
  where
   render :: Render State Input p
-  render st =
+  render Loading = H.text "Loading"
+  render (State player standings) =
     H.div [P.class_ (H.className "content")]
       [ H.h1 [P.class_ (H.className "jumbotron")]
         [H.text "Saison Spektakel 2015/16"]
-      , header st.player
-      , H.div [P.class_ (H.className "bs-example")] [tipTable (tipsForPlayer st.player) st.matchday] ]
+      , header player
+      , H.div [P.class_ (H.className "bs-example")] [tipTable (tipsForPlayer player) standings] ]
 
   eval :: Eval Input State Input (Aff AppEffects)
   eval (Click next) = do
+    teamsM <- liftFI (standings 1)
+    case teamsM of
+      Left text   -> modify (\_ -> Error text)
+      Right teams -> modify (\_ -> State Jan teams)
     pure next
 
 header :: forall p i. Player -> H.HTML p i

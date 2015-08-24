@@ -5,6 +5,8 @@ import Prelude
 import Data.Array
 import Data.Foldable
 import Data.Maybe
+import Data.Int
+import Math (abs)
 
 import Team
 import Player
@@ -29,11 +31,14 @@ trend :: Array Team -> Team -> Int -> Trend
 trend standings team pos =
   case elemIndex team standings of
     Nothing -> Correct -- should yield an error
-    Just i  -> if i==pos then Correct else if i<pos then Worse else Better
+    Just i  -> if i+1==pos then Correct else if i+1<pos then Worse else Better
 
 
 metric :: Int -> Int -> Int
-metric tip actual = tip - actual
+metric tip actual =
+  case fromNumber (abs (toNumber tip - toNumber actual)) of
+    Nothing -> 0 -- should yield an error
+    Just i  -> i
 
 
 tipsForPlayer :: Player -> Array Team

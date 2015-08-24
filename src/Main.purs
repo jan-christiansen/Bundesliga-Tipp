@@ -8,6 +8,8 @@ import Halogen
 import qualified Players as P
 
 
+-- ulimit -n 2560
+
 -- pulp browserify > dist/app.js
 
 

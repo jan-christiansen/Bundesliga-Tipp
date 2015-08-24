@@ -19,11 +19,8 @@ standings :: forall eff. Int -> Aff (ajax :: AJAX | eff) (Either String (Array T
 standings _ = do
   -- result <- get "http://api.football-data.org/alpha/soccerseasons/394/leagueTable"
   -- let response = result.response
-  -- return case readProp "standing" response of
-  --   Right js -> parseMatchday js
-  --   Left  _  -> Nothing
+  -- return (eitherDecode response >>= parseData)
   return (eitherDecode test >>= parseData)
-
 
 parseData :: JValue -> Either String (Array Team)
 parseData (JObject o) =
