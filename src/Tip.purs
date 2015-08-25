@@ -112,3 +112,24 @@ tipsForPlayer Sandra =
     , Frankfurt, Mainz, Hamburg
     , Ingolstadt, Stuttgart, Koeln
     , Berlin, Hannover, Darmstadt ]
+tipsForPlayer Maike =
+    [ Bayern, Dortmund, Wolfsburg
+    , Gladbach, Schalke, Augsburg
+    , Leverkusen, Frankfurt, Bremen
+    , Hoffenheim, Hannover, Koeln
+    , Stuttgart, Mainz, Hamburg
+    , Berlin, Darmstadt, Ingolstadt ]
+tipsForPlayer Nikita =
+     [ Frankfurt, Darmstadt, Stuttgart
+     , Bayern, Ingolstadt, Mainz
+     , Berlin, Dortmund, Schalke
+     , Koeln, Augsburg, Gladbach
+     , Hoffenheim, Hannover, Bremen
+     , Hamburg, Wolfsburg, Leverkusen ]
+tipsForPlayer Spiegel =
+    [ Bayern, Leverkusen, Wolfsburg
+    , Dortmund, Gladbach, Schalke
+    , Stuttgart, Augsburg, Hoffenheim
+    , Hamburg, Frankfurt, Koeln
+    , Mainz, Bremen, Berlin
+    , Hannover, Ingolstadt, Darmstadt ]
