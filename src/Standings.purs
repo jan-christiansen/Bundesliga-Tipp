@@ -9,15 +9,18 @@ import Data.Either
 import Data.Maybe
 import Data.Traversable (traverse)
 import qualified Data.Map as M
-import Network.HTTP.Affjax (AJAX(), get)
-
+import Network.HTTP.Affjax (AJAX(), defaultRequest, affjax)
+import Network.HTTP.RequestHeader (RequestHeader(..))
 
 import Team
 
 
 standings :: forall eff. Int -> Aff (ajax :: AJAX | eff) (Either String (Array Team))
 standings _ = do
-  result <- get "http://api.football-data.org/alpha/soccerseasons/394/leagueTable"
+  let reqHeader = RequestHeader "X-Auth-Token" "9d7d681dea7c4cf49b095d7cc1d8d9c5"
+      req       = defaultRequest { headers = [reqHeader]
+                                 , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" }
+  result <- affjax req
   let response = result.response
   return (eitherDecode response >>= parseData)
 
