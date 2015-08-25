@@ -13,6 +13,7 @@ import Data.Int (toNumber, fromNumber)
 import Data.Array
 import Data.Maybe (Maybe(..))
 import Data.Either
+import Data.Function (on)
 
 import Control.Monad.Eff.Class (MonadEff, liftEff)
 import Halogen
@@ -23,7 +24,7 @@ import qualified Halogen.HTML.Events as E
 import qualified Halogen.HTML.Properties as P
 import DOM (DOM())
 import DOM.Event.EventTarget (eventListener, addEventListener)
-import DOM.Event.EventTypes (readystatechange)
+import DOM.Event.EventTypes (readystatechange, load)
 import DOM.Event.Types (Event())
 import DOM.HTML (window)
 import DOM.HTML.Document (body)
@@ -43,34 +44,21 @@ main :: Eff AppEffects Unit
 main = launchAff $ do
   app <- runUI ui initialState
   appendToBody app.node
-  -- w <- window
-  -- addEventListener
-  --   readystatechange
-  --   (eventListener (temp app.driver))
-  --   false
-  --   (windowToEventTarget w)
-  --     where
-  --       temp :: Driver Input (ajax :: AJAX) -> Event -> Eff AppEffects Unit
-  --       temp driver _ = launchAff (driver (action Load))
-
-  
--- avar :: AVAR, err :: EXCEPTION, dom :: DOM | eff)
-
--- Natural f (Aff (HalogenEffects eff))
-
--- Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
-
--- addEventListener :: forall eff. EventType
---                     -> EventListener (dom :: DOM | eff)
---                     -> Boolean
---                     -> EventTarget -> Eff (dom :: DOM | eff) Unit
-
--- eventListener :: forall eff a. (Event -> Eff eff a) -> EventListener eff                       
+  w <- liftEff window
+  liftEff $
+    addEventListener
+      load
+      (eventListener (eventHandler app.driver))
+      false
+      (windowToEventTarget w)
+ where
+  eventHandler :: Driver Input (ajax :: AJAX) -> Event -> Eff AppEffects Unit
+  eventHandler driver _ = launchAff (driver (action Overview))
 
 
 data Input a =
     SelectPlayer Player a
-  | Load a
+  | Overview a
 
 type Entry = { player :: Player, points :: Int }
 
@@ -86,7 +74,9 @@ initialState = Loading
 
 entriesForStandings :: Array Team -> Array Entry
 entriesForStandings standings =
-  map (\p -> { player: p, points: ratePlayer standings p }) allPlayers
+  sortBy
+    (compare `on` _.points)
+    (map (\p -> { player: p, points: ratePlayer standings p }) allPlayers)
 
 
 ui :: forall eff p. Component State Input (Aff AppEffects) p
@@ -94,38 +84,38 @@ ui = component render eval
  where
   render :: Render State Input p
   render Loading =
-    H.h1_ [H.text "Loading Data..."]
-  render (Error text) = H.text ("An error occurred: " ++ text)
+    renderPage [H.h1_ [H.text "Loading Data..."]]
+  render (Error text) =
+    renderPage [H.text ("An error occurred: " ++ text)]
   render (Players standings) =
     let entries = entriesForStandings standings
     in
-    H.div [P.class_ (H.className "content")]
-      [ H.h1 [P.class_ (H.className "jumbotron")]
-        [H.text "Saison Spektakel 2015/16"]
-      , H.div [P.class_ (H.className "bs-example")] [pointsTable entries] ]
+    renderPage [H.div [P.class_ (H.className "bs-example")] [pointsTable entries]]
   render (Tips player standings) =
-    H.div [P.class_ (H.className "content")]
-      [ H.h1 [P.class_ (H.className "jumbotron")]
-        [H.text "Saison Spektakel 2015/16"]
-      , H.h2_ [H.text ("Spieler: " ++ (show player))]
+    renderPage
+      [ H.h2_ [H.text ("Spieler: " ++ (show player))]
+      , H.button [E.onClick (E.input_ Overview)] [H.text "Zur Übersicht"]
       , H.div [P.class_ (H.className "bs-example")] [tipTable (tipsForPlayer player) standings] ]
 
   eval :: Eval Input State Input (Aff AppEffects)
-  eval (Load next) = do
+  eval (Overview next) = do
     teamsM <- liftFI (standings 1)
     case teamsM of
       Left text   -> modify (\_ -> Error text)
       Right teams -> modify (\_ -> Players teams)
     pure next
   eval (SelectPlayer player next) = do
-    teamsM <- liftFI (standings 1) -- load new???
-    case teamsM of
-      Left text   -> modify (\_ -> Error text)
-      Right teams -> modify (\_ -> Tips player teams)
+    modify (\s -> case s of
+                       Players teams -> Tips player teams
+                       _             -> Error "Switched to tips before teams are loaded")
     pure next
 
+renderPage :: forall p i. Array (H.HTML p i) -> H.HTML p i
+renderPage contents =
+  H.div [P.class_ (H.className "content")]
+    ((H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"]) : contents)
 
-pointsTable :: forall p i. Array Entry -> H.HTML p (Input Unit)
+pointsTable :: forall p. Array Entry -> H.HTML p (Input Unit)
 pointsTable entries =
   H.table
     [P.class_ (H.className "table")]

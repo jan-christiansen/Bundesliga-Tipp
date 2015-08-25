@@ -31,7 +31,7 @@ trend :: Array Team -> Team -> Int -> Trend
 trend standings team pos =
   case elemIndex team standings of
     Nothing -> Correct -- should yield an error
-    Just i  -> if i+1==pos then Correct else if i+1<pos then Worse else Better
+    Just i  -> if i+1==pos then Correct else if i+1<pos then Better else Worse
 
 
 metric :: Int -> Int -> Int
