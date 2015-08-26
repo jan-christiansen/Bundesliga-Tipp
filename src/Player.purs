@@ -17,6 +17,7 @@ data Player =
   | Sandra
   | Maike
   | Nikita
+  | Henning
   | Spiegel
 
 instance showPlayer :: Show Player where
@@ -32,8 +33,9 @@ instance showPlayer :: Show Player where
   show Sandra = "Sandra"
   show Maike = "Maike"
   show Nikita = "Nikita (alias Zufallstipp)"
+  show Henning = "Prof. Henning"
   show Spiegel = "Spiegel.de-Prognose"
 
 allPlayers :: Array Player
 allPlayers =
-  [JanWulf, Jan, JR, Christoph, Johannes, Julia, Daniel, Mirko, Ulf, Sandra, Maike, Nikita, Spiegel]
+  [JanWulf, Jan, JR, Christoph, Johannes, Julia, Daniel, Mirko, Ulf, Sandra, Maike, Nikita, Henning, Spiegel]

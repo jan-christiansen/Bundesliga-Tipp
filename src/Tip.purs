@@ -133,3 +133,10 @@ tipsForPlayer Spiegel =
     , Hamburg, Frankfurt, Koeln
     , Mainz, Bremen, Berlin
     , Hannover, Ingolstadt, Darmstadt ]
+tipsForPlayer Henning =
+    [ Bayern, Dortmund, Leverkusen
+    , Gladbach, Schalke, Wolfsburg
+    , Hamburg, Hoffenheim, Stuttgart
+    , Augsburg, Frankfurt, Bremen
+    , Mainz, Koeln, Berlin
+    , Hannover, Ingolstadt, Darmstadt ]
