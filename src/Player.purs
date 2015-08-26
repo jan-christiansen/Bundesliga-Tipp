@@ -36,4 +36,17 @@ instance showPlayer :: Show Player where
 
 allPlayers :: Array Player
 allPlayers =
-  [JanWulf, Jan, JR, Christoph, Johannes, Julia, Daniel, Mirko, Ulf, Sandra, Maike, Nikita, Spiegel]
+  [ JanWulf
+  , Jan
+  , JR
+  , Christoph
+  , Johannes
+  , Julia
+  , Daniel
+  , Mirko
+  , Ulf
+  , Sandra
+  , Maike
+  , Nikita
+  , Spiegel
+  ]
