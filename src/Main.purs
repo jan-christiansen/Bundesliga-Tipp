@@ -80,6 +80,7 @@ playerLit Ulf = "ulf"
 playerLit Sandra = "sandra"
 playerLit Maike = "maike"
 playerLit Nikita = "nikita"
+playerLit Henning = "henning"
 playerLit Spiegel = "spiegel"
 
 
