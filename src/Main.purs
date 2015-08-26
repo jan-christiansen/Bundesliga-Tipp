@@ -61,7 +61,7 @@ routing :: Match Route
 routing =
   const Players <$> lit ""
     <|>
-  const (Tips Jan) <$> (lit "tips" *> routingPlayer)
+  Tips <$> (lit "tips" *> routingPlayer)
 
 routingPlayer :: Match Player
 routingPlayer =
