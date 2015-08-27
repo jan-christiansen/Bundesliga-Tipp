@@ -14,7 +14,7 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (print)
 import Control.Monad.Free (liftFI)
 import Data.Foldable (foldr)
-import Math (abs, round)
+import Math (abs, round, pow)
 import Data.Int (toNumber, fromNumber)
 import Data.Array
 import Data.Maybe (Maybe(..), maybe)
@@ -108,8 +108,7 @@ main = launchAff $ do
 data Input a =
     SelectPlayer Player a
   | Overview a
-  | UseEuclid a
-  | UseWulf a
+  | Use Metric a
 
 data State =
     Loading
@@ -122,7 +121,7 @@ initialState :: State
 initialState = Loading
 
 initialMetric :: Metric
-initialMetric = Euclid
+initialMetric = Manhattan
 
 ui :: forall eff p. Component State Input (Aff AppEffects) p
 ui = component render eval
@@ -163,11 +162,8 @@ ui = component render eval
       Left text   -> S.modify (\_ -> Error text)
       Right (Tuple metric standings) -> S.modify (\_ -> Tips player metric standings)
     pure next
-  eval (UseEuclid next) = do
-    S.modify (evalMetric Euclid)
-    pure next
-  eval (UseWulf next) = do
-    S.modify (evalMetric Wulf)
+  eval (Use metric next) = do
+    S.modify (evalMetric metric)
     pure next
 
   evalMetric _ Loading = Loading
@@ -191,11 +187,15 @@ renderPage contents =
 renderMetrics :: forall p. Metric -> H.HTML p (Input Unit)
 renderMetrics metric =
   B.navPills
-    [ Tuple (H.a [ E.onClick (E.input_ UseEuclid) ] [ H.text "Euklid" ]) (metric == Euclid)
-    , Tuple (H.a [ E.onClick (E.input_ UseWulf) ] [ H.text "Wulf" ]) (metric == Wulf)
-    ]
+    [ row "Manhattan" Manhattan 
+    , row "Euklid" Euclid
+    , row "Wulf" Wulf
+      ]
+ where
+  row name metric' =
+    Tuple (H.a [ E.onClick (E.input_ (Use metric')) ] [ H.text name ]) (metric==metric')
 
-type Entry = { player :: Player, points :: Int }
+type Entry = { player :: Player, points :: Number }
 
 entriesForStandings :: Metric -> Array Team -> Array Entry
 entriesForStandings metric standings =
@@ -214,7 +214,7 @@ pointsTable entries =
     H.tr_
       [ H.td_ [H.text (show i)]
       , H.td_ [H.a [P.href (reverseRoute (TipsRoute entry.player))] [H.text (show entry.player)]]
-      , H.td_ [H.text (show entry.points)] ]
+      , H.td_ [H.text (showNumber entry.points 1)] ]
 
 tipTable :: forall p i. Metric -> Array Team -> Array Team -> H.HTML p i
 tipTable metric tip standings =
@@ -224,22 +224,31 @@ tipTable metric tip standings =
  where
   tipHeader = H.tr_ [H.th_ [H.text "#"], H.th_ [H.text "Verein"], H.th_ [H.text "Abstand"]]
   tipRow i team =
-    let dist = rateTip metric standings team i
+    let dist = case fromNumber (rateTip Manhattan standings team i) of
+                    Just i -> i
+        p = rateTip metric standings team i
         t = trend standings team i
     in
     H.tr
-      [rowColor metric dist t]
+      [rowColor dist t]
       [ H.td_ [H.text (show i)]
       , H.td_ [H.text (show team)]
-      , H.td_ [H.text (show dist)] ]
+      , H.td_ [H.text (showNumber p 1)] ]
 
-rowColor :: forall i. Metric -> Int -> Trend -> H.Prop i
-rowColor Wulf dist trend =
-  P.classes []
-rowColor _ dist trend =
+rowColor :: forall i. Int -> Trend -> H.Prop i
+rowColor dist trend =
   P.classes [H.className (trendClass trend), H.className (distClass dist)]
  where
   trendClass Correct = "correct"
   trendClass Worse   = "worse"
   trendClass Better  = "better"
   distClass i = "dist-" ++ show i
+
+
+showNumber :: Number -> Int -> String
+showNumber p d = show (roundTo p d)
+ 
+roundTo :: Number -> Int -> Number
+roundTo x d = round (x * m) / m
+ where
+  m = pow 10.0 (toNumber d)

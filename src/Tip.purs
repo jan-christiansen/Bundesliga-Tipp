@@ -22,47 +22,49 @@ trend standings team pos =
 
 
 data Metric =
-    Euclid
+    Manhattan
+  | Euclid
   | Wulf
 
 instance eqMetric :: Eq Metric where
+  eq Manhattan Manhattan = true
   eq Euclid Euclid = true
   eq Wulf Wulf = true
   eq _ _ = false
 
-allMetrics :: Array Metric
-allMetrics = [Euclid, Wulf]
-
-localization :: Metric -> String
-localization Euclid = "Euklid"
-localization Wulf = "Wulf"
-
-ratePlayer :: Metric -> Array Team -> Player -> Int
+ratePlayer :: Metric -> Array Team -> Player -> Number
 ratePlayer metric standings p =
   rateTips metric standings (tipsForPlayer p)
 
-rateTips :: Metric -> Array Team -> Array Team -> Int
+rateTips :: Metric -> Array Team -> Array Team -> Number
 rateTips metric standings tips =
-  sum (zipWith (rateTip metric standings) tips (range 1 (length tips)))
+  normalize metric (sum (zipWith (rateTip metric standings) tips (range 1 (length tips))))
 
-rateTip :: Metric -> Array Team -> Team -> Int -> Int
+normalize :: Metric -> Number -> Number
+normalize Manhattan s = s
+normalize Euclid    s = sqrt s
+normalize Wulf      s = pow s 2.0
+
+
+rateTip :: Metric -> Array Team -> Team -> Int -> Number
 rateTip metric standings team pos =
   case elemIndex team standings of
-    Nothing -> 0 -- should yield an error
+    Nothing -> 0.0 -- should yield an error
     Just i  -> calculate metric pos (i+1)
 
-calculate :: Metric -> Int -> Int -> Int
-calculate Euclid = euclid
-calculate Wulf   = wulf
+calculate :: Metric -> Int -> Int -> Number
+calculate Manhattan = manhattan
+calculate Euclid    = euclid
+calculate Wulf      = wulf
 
-euclid :: Int -> Int -> Int
-euclid tip actual =
-  case fromNumber (abs (toNumber tip - toNumber actual)) of
-       Nothing -> 0 -- should yield an error
-       Just i  -> i
+manhattan :: Int -> Int -> Number
+manhattan tip actual = abs (toNumber tip - toNumber actual)
 
-wulf :: Int -> Int -> Int
-wulf tip actual = round (pow ((sqrt (toNumber tip) + sqrt (toNumber actual))) 2.0)
+euclid :: Int -> Int -> Number
+euclid tip actual = pow (toNumber tip - toNumber actual) 2.0
+
+wulf :: Int -> Int -> Number
+wulf tip actual = sqrt (abs (toNumber tip - toNumber actual))
 
 
 tipsForPlayer :: Player -> Array Team
