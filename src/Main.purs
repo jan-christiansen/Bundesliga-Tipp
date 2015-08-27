@@ -140,10 +140,17 @@ ui = component render eval
       ]
   render (Tips player metric standings) =
     renderPage
-      [ H.h2_ [H.text ("Spieler: " ++ show player)]
-      , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
-      , H.div [P.class_ (H.className "bs-example")]
-              [tipTable metric (tipsForPlayer player) standings]
+      [ H.table [P.class_ (H.className "main-table") ]
+        [ H.tr_
+          [ H.td [ P.class_ (H.className "nav-col") ]
+                 [ H.h2_ [H.text (show player)]
+                 , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
+                 ]
+          , H.td [ P.class_ (H.className "content-col") ]
+                 [tipTable metric (tipsForPlayer player) standings]
+          , H.td_ []
+          ]
+        ]
       , renderMetrics metric
       ]
 

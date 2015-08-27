@@ -10,10 +10,17 @@ caption {
     margin: 25px 25px 25px 25px;
 }
 
-.cur-table {
-    left: 50%;
-    margin-left: -150px;
-    position: relative;
+.main-table {
+    width: 100%;
+    table-layout : fixed;
+}
+
+.nav-col {
+  vertical-align: top;
+}
+
+.content-col {
+    width: 400px;
 }
 
 .bs-example {
