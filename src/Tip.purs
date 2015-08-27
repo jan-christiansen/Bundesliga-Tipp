@@ -3,27 +3,14 @@ module Tip where
 
 import Prelude
 import Data.Array
-import Data.Foldable
 import Data.Maybe
 import Data.Int
-import Math (abs)
+import Data.Foldable (sum)
+import Math (abs, pow, sqrt)
 
 import Team
 import Player
 
-
-ratePlayer :: Array Team -> Player -> Int
-ratePlayer standings p = rateTips standings (tipsForPlayer p)
-
-rateTips :: Array Team -> Array Team -> Int
-rateTips standings tips =
-  sum (zipWith (rateTip standings) tips (range 1 (length tips)))
-
-rateTip :: Array Team -> Team -> Int -> Int
-rateTip standings team pos =
-  case elemIndex team standings of
-    Nothing -> 0 -- should yield an error
-    Just i  -> metric pos (i+1)
 
 data Trend = Better | Correct | Worse
 
@@ -34,11 +21,48 @@ trend standings team pos =
     Just i  -> if i+1==pos then Correct else if i+1<pos then Better else Worse
 
 
-metric :: Int -> Int -> Int
-metric tip actual =
-  case fromNumber (abs (toNumber tip - toNumber actual)) of
+data Metric =
+    Euclid
+  | Wulf
+
+instance eqMetric :: Eq Metric where
+  eq Euclid Euclid = true
+  eq Wulf Wulf = true
+  eq _ _ = false
+
+allMetrics :: Array Metric
+allMetrics = [Euclid, Wulf]
+
+localization :: Metric -> String
+localization Euclid = "Euklid"
+localization Wulf = "Wulf"
+
+ratePlayer :: Metric -> Array Team -> Player -> Int
+ratePlayer metric standings p =
+  rateTips metric standings (tipsForPlayer p)
+
+rateTips :: Metric -> Array Team -> Array Team -> Int
+rateTips metric standings tips =
+  sum (zipWith (rateTip metric standings) tips (range 1 (length tips)))
+
+rateTip :: Metric -> Array Team -> Team -> Int -> Int
+rateTip metric standings team pos =
+  case elemIndex team standings of
     Nothing -> 0 -- should yield an error
-    Just i  -> i
+    Just i  -> calculate metric pos (i+1)
+
+calculate :: Metric -> Int -> Int -> Int
+calculate Euclid = euclid
+calculate Wulf   = wulf
+
+euclid :: Int -> Int -> Int
+euclid tip actual =
+  case fromNumber (abs (toNumber tip - toNumber actual)) of
+       Nothing -> 0 -- should yield an error
+       Just i  -> i
+
+wulf :: Int -> Int -> Int
+wulf tip actual = round (pow ((sqrt (toNumber tip) + sqrt (toNumber actual))) 2.0)
 
 
 tipsForPlayer :: Player -> Array Team

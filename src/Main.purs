@@ -14,13 +14,13 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (print)
 import Control.Monad.Free (liftFI)
 import Data.Foldable (foldr)
-
-import Math (abs)
+import Math (abs, round)
 import Data.Int (toNumber, fromNumber)
 import Data.Array
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Either
 import Data.Function (on)
+import Data.Tuple (Tuple(..))
 
 import Control.Monad.Eff.Class (MonadEff, liftEff)
 import Halogen
@@ -47,21 +47,22 @@ import Team
 import Player
 import Tip
 import Standings
+import qualified Bootstrap as B
 
 
 -- Routing
 
-data Route = Players | Tips Player
+data Route = PlayersRoute | TipsRoute Player
 
 reverseRoute :: Route -> String
-reverseRoute Players  = ""
-reverseRoute (Tips p) = "#tips/" ++ playerLit p
+reverseRoute PlayersRoute  = "#overview"
+reverseRoute (TipsRoute p) = "#tips/" ++ playerLit p
 
 routing :: Match Route
 routing =
-  const Players <$> lit ""
+  const PlayersRoute <$> lit "overview"
     <|>
-  Tips <$> (lit "tips" *> routingPlayer)
+  TipsRoute <$> (lit "tips" *> routingPlayer)
 
 routingPlayer :: Match Player
 routingPlayer =
@@ -100,32 +101,28 @@ main = launchAff $ do
       false
       (windowToEventTarget w)
  where
-  route driver Players  = launchAff (driver (action Overview))
-  route driver (Tips p) = launchAff (driver (action (SelectPlayer p)))
+  route driver PlayersRoute  = launchAff (driver (action Overview))
+  route driver (TipsRoute p) = launchAff (driver (action (SelectPlayer p)))
 
 
 data Input a =
     SelectPlayer Player a
   | Overview a
-
-type Entry = { player :: Player, points :: Int }
+  | UseEuclid a
+  | UseWulf a
 
 data State =
     Loading
   | Error String
-  | RenderPlayers (Array Team)
-  | RenderTips Player (Array Team)
+  | Players Metric (Array Team)
+  | Tips Player Metric (Array Team)
 
 
 initialState :: State
 initialState = Loading
 
-entriesForStandings :: Array Team -> Array Entry
-entriesForStandings standings =
-  sortBy
-    (compare `on` _.points)
-    (map (\p -> { player: p, points: ratePlayer standings p }) allPlayers)
-
+initialMetric :: Metric
+initialMetric = Euclid
 
 ui :: forall eff p. Component State Input (Aff AppEffects) p
 ui = component render eval
@@ -135,42 +132,76 @@ ui = component render eval
     renderPage [H.h1_ [H.text "Loading Data..."]]
   render (Error text) =
     renderPage [H.text ("An error occurred: " ++ text)]
-  render (RenderPlayers standings) =
-    let entries = entriesForStandings standings
+  render (Players metric standings) =
+    let entries = entriesForStandings metric standings
     in
-    renderPage [H.div [P.class_ (H.className "bs-example")] [pointsTable entries]]
-  render (RenderTips player standings) =
     renderPage
-      [ H.h2_ [H.text ("Spieler: " ++ (show player))]
-      , H.a [P.href (reverseRoute Players)] [H.text "Zur Übersicht"]
-      , H.div [P.class_ (H.className "bs-example")] [tipTable (tipsForPlayer player) standings] ]
+      [ H.div [P.class_ (H.className "bs-example")] [pointsTable entries]
+      , renderMetrics metric
+      ]
+  render (Tips player metric standings) =
+    renderPage
+      [ H.h2_ [H.text ("Spieler: " ++ show player)]
+      , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
+      , H.div [P.class_ (H.className "bs-example")]
+              [tipTable metric (tipsForPlayer player) standings]
+      , renderMetrics metric
+      ]
 
   eval :: Eval Input State Input (Aff AppEffects)
   eval (Overview next) = do
     s <- S.get
-    teamsM <- teams s
-    case teamsM of
-      Left text   -> S.modify (\_ -> Error text)
-      Right teams -> S.modify (\_ -> RenderPlayers teams)
+    stateE <- currentState s
+    case stateE of
+      Left text -> S.modify (\_ -> Error text)
+      Right (Tuple metric standings) -> S.modify (\_ -> Players metric standings)
     pure next
   eval (SelectPlayer player next) = do
     s <- S.get
-    teamsM <- teams s
-    case teamsM of
+    stateE <- currentState s
+    case stateE of
       Left text   -> S.modify (\_ -> Error text)
-      Right teams -> S.modify (\_ -> RenderTips player teams)
+      Right (Tuple metric standings) -> S.modify (\_ -> Tips player metric standings)
+    pure next
+  eval (UseEuclid next) = do
+    S.modify (evalMetric Euclid)
+    pure next
+  eval (UseWulf next) = do
+    S.modify (evalMetric Wulf)
     pure next
 
-  teams (RenderTips _ standings)  = return (Right standings)
-  teams (RenderPlayers standings) = return (Right standings)
-  teams _                         = do
+  evalMetric _ Loading = Loading
+  evalMetric _ (Error t) = Error t
+  evalMetric metric (Tips p _ standings) = Tips p metric standings
+  evalMetric metric (Players _ standings) = Players metric standings  
+
+  currentState (Tips _ metric standings)  = return (Right (Tuple metric standings))
+  currentState (Players metric standings) = return (Right (Tuple metric standings))
+  currentState _ = do
     S.modify (\_ -> Loading)
-    liftFI (standings 1)
+    standingsE <- liftFI (standings 1)
+    return (map (Tuple initialMetric) standingsE)
 
 renderPage :: forall p i. Array (H.HTML p i) -> H.HTML p i
 renderPage contents =
   H.div [P.class_ (H.className "content")]
-    ((H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"]) : contents)
+    ((H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"])
+     : contents)
+
+renderMetrics :: forall p. Metric -> H.HTML p (Input Unit)
+renderMetrics metric =
+  B.navPills
+    [ Tuple (H.a [ E.onClick (E.input_ UseEuclid) ] [ H.text "Euklid" ]) (metric == Euclid)
+    , Tuple (H.a [ E.onClick (E.input_ UseWulf) ] [ H.text "Wulf" ]) (metric == Wulf)
+    ]
+
+type Entry = { player :: Player, points :: Int }
+
+entriesForStandings :: Metric -> Array Team -> Array Entry
+entriesForStandings metric standings =
+  sortBy
+    (compare `on` _.points)
+    (map (\p -> { player: p, points: ratePlayer metric standings p }) allPlayers)
 
 pointsTable :: forall p. Array Entry -> H.HTML p (Input Unit)
 pointsTable entries =
@@ -182,34 +213,33 @@ pointsTable entries =
   pointsRow i entry =
     H.tr_
       [ H.td_ [H.text (show i)]
-      , H.td_ [H.a [P.href (reverseRoute (Tips entry.player))] [H.text (show entry.player)]]
+      , H.td_ [H.a [P.href (reverseRoute (TipsRoute entry.player))] [H.text (show entry.player)]]
       , H.td_ [H.text (show entry.points)] ]
 
-tipTable :: forall p i. Array Team -> Array Team -> H.HTML p i
-tipTable tip standings =
+tipTable :: forall p i. Metric -> Array Team -> Array Team -> H.HTML p i
+tipTable metric tip standings =
   H.table
     [P.class_ (H.className "table")]
     [H.thead_ [tipHeader], H.tbody_ (zipWith tipRow (range 1 (length tip)) tip)]
  where
   tipHeader = H.tr_ [H.th_ [H.text "#"], H.th_ [H.text "Verein"], H.th_ [H.text "Abstand"]]
   tipRow i team =
-    let dist = rateTip standings team i
+    let dist = rateTip metric standings team i
         t = trend standings team i
     in
     H.tr
-      [rowColor dist t]
+      [rowColor metric dist t]
       [ H.td_ [H.text (show i)]
       , H.td_ [H.text (show team)]
       , H.td_ [H.text (show dist)] ]
 
-rowColor :: forall i. Int -> Trend -> H.Prop i
-rowColor dist trend =
+rowColor :: forall i. Metric -> Int -> Trend -> H.Prop i
+rowColor Wulf dist trend =
+  P.classes []
+rowColor _ dist trend =
   P.classes [H.className (trendClass trend), H.className (distClass dist)]
  where
   trendClass Correct = "correct"
   trendClass Worse   = "worse"
   trendClass Better  = "better"
-  distClass i =
-    case fromNumber (abs (toNumber i)) of
-      Nothing -> "" -- should yield an error
-      Just i  -> "dist-" ++ show i
+  distClass i = "dist-" ++ show i
