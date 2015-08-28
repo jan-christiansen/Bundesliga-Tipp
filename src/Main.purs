@@ -55,14 +55,14 @@ import qualified Bootstrap as B
 data Route = PlayersRoute | TipsRoute Player
 
 reverseRoute :: Route -> String
-reverseRoute PlayersRoute  = "#overview"
-reverseRoute (TipsRoute p) = "#tips/" ++ playerLit p
+reverseRoute PlayersRoute  = "#"
+reverseRoute (TipsRoute p) = "#" ++ playerLit p
 
 routing :: Match Route
 routing =
-  const PlayersRoute <$> lit "overview"
+  const PlayersRoute <$> lit ""
     <|>
-  TipsRoute <$> (lit "tips" *> routingPlayer)
+  TipsRoute <$> routingPlayer
 
 routingPlayer :: Match Player
 routingPlayer =

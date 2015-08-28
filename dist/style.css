@@ -36,7 +36,7 @@ caption {
 
 .correct {
     color: white;
-    background-color: rgb(200, 200, 200);
+    background-color: rgb(0, 180, 0);
 }
 
 
@@ -45,71 +45,71 @@ caption {
 }
 
 .better.dist-1 {
-    background-color: rgb(188, 200, 188);
+    background-color: rgb(10, 170, 0);
 }
 
 .better.dist-2 {
-    background-color: rgb(176, 200, 176);
+    background-color: rgb(20, 160, 0);
 }
 
 .better.dist-3 {
-    background-color: rgb(164, 200, 164);
+    background-color: rgb(30, 150, 0);
 }
 
 .better.dist-4 {
-    background-color: rgb(152, 200, 152);
+    background-color: rgb(40, 140, 0);
 }
 
 .better.dist-5 {
-    background-color: rgb(140, 200, 140);
+    background-color: rgb(50, 130, 0);
 }
 
 .better.dist-6 {
-    background-color: rgb(128, 200, 128);
+    background-color: rgb(60, 120, 0);
 }
 
 .better.dist-7 {
-    background-color: rgb(116, 200, 116);
+    background-color: rgb(70, 110, 0);
 }
 
 .better.dist-8 {
-    background-color: rgb(104, 200, 104);
+    background-color: rgb(80, 100, 0);
 }
 
 .better.dist-9 {
-    background-color: rgb(92, 200, 92);
+    background-color: rgb(90, 90, 0);
 }
 
 .better.dist-10 {
-    background-color: rgb(80, 200, 80);
+    background-color: rgb(100, 80, 0);
 }
 
 .better.dist-11 {
-    background-color: rgb(68, 200, 68);
+    background-color: rgb(110, 70, 0);
 }
 
 .better.dist-12 {
-    background-color: rgb(56, 200, 56);
+    background-color: rgb(120, 60, 0);
 }
 
 .better.dist-13 {
-    background-color: rgb(44, 200, 44);
+    background-color: rgb(130, 50, 0);
 }
 
 .better.dist-14 {
-    background-color: rgb(32, 200, 32);
+    background-color: rgb(140, 40, 0);
 }
 
 .better.dist-15 {
-    background-color: rgb(20, 200, 20);
+    background-color: rgb(150, 30, 0);
 }
 
 .better.dist-16 {
-    background-color: rgb(8, 200, 8);
+    background-color: rgb(160, 20, 0);
 }
 
 .better.dist-17 {
-    background-color: rgb(0, 200, 0);
+    background-color: rgb(170, 10, 0);
 }
 
 
@@ -118,69 +118,69 @@ caption {
 }
 
 .worse.dist-1 {
-    background-color: rgb(200, 188, 188);
+    background-color: rgb(10, 170, 0);
 }
 
 .worse.dist-2 {
-    background-color: rgb(200, 176, 176);
+    background-color: rgb(20, 160, 0);
 }
 
 .worse.dist-3 {
-    background-color: rgb(200, 164, 164);
+    background-color: rgb(30, 150, 0);
 }
 
 .worse.dist-4 {
-    background-color: rgb(200, 152, 152);
+    background-color: rgb(40, 140, 0);
 }
 
 .worse.dist-5 {
-    background-color: rgb(200, 140, 140);
+    background-color: rgb(50, 130, 0);
 }
 
 .worse.dist-6 {
-    background-color: rgb(200, 128, 128);
+    background-color: rgb(60, 120, 0);
 }
 
 .worse.dist-7 {
-    background-color: rgb(200, 116, 116);
+    background-color: rgb(70, 110, 0);
 }
 
 .worse.dist-8 {
-    background-color: rgb(200, 104, 104);
+    background-color: rgb(80, 100, 0);
 }
 
 .worse.dist-9 {
-    background-color: rgb(200, 92, 92);
+    background-color: rgb(90, 90, 0);
 }
 
 .worse.dist-10 {
-    background-color: rgb(200, 80, 80);
+    background-color: rgb(100, 80, 0);
 }
 
 .worse.dist-11 {
-    background-color: rgb(200, 68, 68);
+    background-color: rgb(110, 70, 0);
 }
 
 .worse.dist-12 {
-    background-color: rgb(200, 56, 56);
+    background-color: rgb(120, 60, 0);
 }
 
 .worse.dist-13 {
-    background-color: rgb(200, 44, 44);
+    background-color: rgb(130, 50, 0);
 }
 
 .worse.dist-14 {
-    background-color: rgb(200, 32, 32);
+    background-color: rgb(140, 40, 0);
 }
 
 .worse.dist-15 {
-    background-color: rgb(200, 20, 20);
+    background-color: rgb(150, 30, 0);
 }
 
 .worse.dist-16 {
-    background-color: rgb(200, 8, 8);
+    background-color: rgb(160, 20, 0);
 }
 
 .worse.dist-17 {
-    background-color: rgb(200, 0, 0);
+    background-color: rgb(170, 10, 0);
 }
