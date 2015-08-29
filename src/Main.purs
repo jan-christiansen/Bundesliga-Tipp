@@ -133,14 +133,15 @@ ui = component render eval
     renderPage [H.h1_ [H.text "Loading Data..."]]
   render (Error text) =
     renderPage [H.text ("An error occurred: " ++ text)]
-  render (Players metric standings day) =
-    let entries = entriesForStandings metric standings day
+  render (Players metric standings days) =
+    let entries = entriesForStandings metric standings
     in
     renderPage
-      [ H.div [P.class_ (H.className "bs-example")] [pointsTable entries]
-      , renderMetrics metric
+      [ renderMetrics metric
+      , H.div [P.class_ (H.className "bs-example")] [pointsTable entries]
+      , renderMatchdays days
       ]
-  render (Tips player metric standings day) =
+  render (Tips player metric standings days) =
     renderPage
       [ H.table [P.class_ (H.className "main-table") ]
         [ H.tr_
@@ -150,10 +151,11 @@ ui = component render eval
                  ]
           , H.td [ P.class_ (H.className "content-col") ]
                  [tipTable metric (tipsForPlayer player) standings]
-          , H.td_ []
+          , H.td [ P.class_ (H.className "metric-col") ]
+                 [ renderMetrics metric ]
           ]
         ]
-      , renderMetrics metric
+      , renderMatchdays days
       ]
 
   eval :: Eval Input State Input (Aff AppEffects)
@@ -172,14 +174,16 @@ ui = component render eval
       Right (Triple metric standings days) -> S.modify (\_ -> Tips player metric standings days)
     pure next
   eval (SelectDay day next) = do
-    S.modify selectDay
-    standingsE <- liftFI (standings parseStandings (Just day))
+    standingsE <- liftFI (standings (Just day))
+    S.modify (case standingsE of
+                Left text -> const (Error text)
+                Right standings -> selectDay standings)
     pure next
    where
-    selectDay (Tips p m st (Tuple _ max))  = Tips p m st (Tuple day max)
-    selectDay (Players m st (Tuple _ max)) = Players m st (Tuple day max)
-    selectDay (Error t)        = Error t
-    selectDay Loading          = Loading
+    selectDay standings (Tips p m _ (Tuple _ max))  = Tips p m standings (Tuple day max)
+    selectDay standings (Players m _ (Tuple _ max)) = Players m standings (Tuple day max)
+    selectDay _ (Error t)        = Error t
+    selectDay _ Loading          = Loading
   eval (Use metric next) = do
     S.modify (evalMetric metric)
     pure next
@@ -195,7 +199,10 @@ ui = component render eval
     S.modify (\_ -> Loading)
     maxDayE <- liftFI matchdays
     standingsE <- liftFI (standings Nothing)
-    return (map (\s -> Triple initialMetric s (Tuple maxDayE maxDayE)) standingsE)
+    return (do
+       maxDay <- maxDayE
+       standings <- standingsE
+       return (Triple initialMetric standings (Tuple maxDay maxDay)))
 
 data Triple a b c = Triple a b c
 
@@ -204,6 +211,14 @@ renderPage contents =
   H.div [P.class_ (H.className "content")]
     ((H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"])
      : contents)
+
+renderMatchdays :: forall p. Tuple Int Int -> H.HTML p (Input Unit)
+renderMatchdays (Tuple day maxDay) =
+  B.navPills
+    (map row (range 1 maxDay))
+ where
+  row day' =
+    Tuple (H.a [ E.onClick (E.input_ (SelectDay day')) ] [ H.text (show day') ]) (day==day')
 
 renderMetrics :: forall p. Metric -> H.HTML p (Input Unit)
 renderMetrics metric =

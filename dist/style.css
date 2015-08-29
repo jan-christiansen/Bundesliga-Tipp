@@ -15,12 +15,23 @@ caption {
     table-layout : fixed;
 }
 
+.nav {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
 .nav-col {
   vertical-align: top;
 }
 
 .content-col {
     width: 400px;
+}
+
+.metric-col {
+
+    vertical-align: top;
+    float: right;
 }
 
 .bs-example {

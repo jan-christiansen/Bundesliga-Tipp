@@ -25,17 +25,17 @@ requestData parser mDay = do
   return (eitherDecode response >>= parser)
  where
   matchdayQuery Nothing = ""
-  matchdayQuery (Just i) = "matchday=" ++ show i
+  matchdayQuery (Just i) = "?matchday=" ++ show i
 
 standings :: forall eff. Maybe Int -> Aff (ajax :: AJAX | eff) (Either String (Array Team))
 standings = requestData parseStandings
 
 matchdays :: forall eff. Aff (ajax :: AJAX | eff) (Either String Int)
-matchdays = requestData parseMatchday
+matchdays = requestData parseMatchday Nothing
 
 parseField :: String -> JValue -> Either String JValue
 parseField fieldName (JObject o) =
-  maybe (Left "No property standing") Right (M.lookup fieldName o)
+  maybe (Left ("No property" ++ show fieldName)) Right (M.lookup fieldName o)
 parseField _ _                   =
   Left "Data is not a object"
 
@@ -47,7 +47,7 @@ parseInt (JInt i) = Right i
 parseInt _        = Left "Data is not an integer"
 
 parseStandings :: JValue -> Either String (Array Team)
-parseStandings jValue = parseField "standings" jValue >>= parseStanding
+parseStandings jValue = parseField "standing" jValue >>= parseStanding
 
 parseStanding :: JValue -> Either String (Array Team)
 parseStanding (JArray a) = traverse parseTeam a
