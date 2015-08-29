@@ -104,17 +104,19 @@ main = launchAff $ do
   route driver PlayersRoute  = launchAff (driver (action Overview))
   route driver (TipsRoute p) = launchAff (driver (action (SelectPlayer p)))
 
+type Matchday = Int
 
 data Input a =
     SelectPlayer Player a
+  | SelectDay Matchday a
   | Overview a
   | Use Metric a
 
 data State =
     Loading
   | Error String
-  | Players Metric (Array Team)
-  | Tips Player Metric (Array Team)
+  | Players Metric (Array Team) (Tuple Matchday Int)
+  | Tips Player Metric (Array Team) (Tuple Matchday Int)
 
 
 initialState :: State
@@ -131,14 +133,14 @@ ui = component render eval
     renderPage [H.h1_ [H.text "Loading Data..."]]
   render (Error text) =
     renderPage [H.text ("An error occurred: " ++ text)]
-  render (Players metric standings) =
-    let entries = entriesForStandings metric standings
+  render (Players metric standings day) =
+    let entries = entriesForStandings metric standings day
     in
     renderPage
       [ H.div [P.class_ (H.className "bs-example")] [pointsTable entries]
       , renderMetrics metric
       ]
-  render (Tips player metric standings) =
+  render (Tips player metric standings day) =
     renderPage
       [ H.table [P.class_ (H.className "main-table") ]
         [ H.tr_
@@ -160,30 +162,42 @@ ui = component render eval
     stateE <- currentState s
     case stateE of
       Left text -> S.modify (\_ -> Error text)
-      Right (Tuple metric standings) -> S.modify (\_ -> Players metric standings)
+      Right (Triple metric standings days) -> S.modify (\_ -> Players metric standings days)
     pure next
   eval (SelectPlayer player next) = do
     s <- S.get
     stateE <- currentState s
     case stateE of
       Left text   -> S.modify (\_ -> Error text)
-      Right (Tuple metric standings) -> S.modify (\_ -> Tips player metric standings)
+      Right (Triple metric standings days) -> S.modify (\_ -> Tips player metric standings days)
     pure next
+  eval (SelectDay day next) = do
+    S.modify selectDay
+    standingsE <- liftFI (standings parseStandings (Just day))
+    pure next
+   where
+    selectDay (Tips p m st (Tuple _ max))  = Tips p m st (Tuple day max)
+    selectDay (Players m st (Tuple _ max)) = Players m st (Tuple day max)
+    selectDay (Error t)        = Error t
+    selectDay Loading          = Loading
   eval (Use metric next) = do
     S.modify (evalMetric metric)
     pure next
 
   evalMetric _ Loading = Loading
   evalMetric _ (Error t) = Error t
-  evalMetric metric (Tips p _ standings) = Tips p metric standings
-  evalMetric metric (Players _ standings) = Players metric standings  
+  evalMetric metric (Tips p _ standings days) = Tips p metric standings days
+  evalMetric metric (Players _ standings days) = Players metric standings days
 
-  currentState (Tips _ metric standings)  = return (Right (Tuple metric standings))
-  currentState (Players metric standings) = return (Right (Tuple metric standings))
+  currentState (Tips _ metric standings days)  = return (Right (Triple metric standings days))
+  currentState (Players metric standings days) = return (Right (Triple metric standings days))
   currentState _ = do
     S.modify (\_ -> Loading)
-    standingsE <- liftFI (standings 1)
-    return (map (Tuple initialMetric) standingsE)
+    maxDayE <- liftFI matchdays
+    standingsE <- liftFI (standings Nothing)
+    return (map (\s -> Triple initialMetric s (Tuple maxDayE maxDayE)) standingsE)
+
+data Triple a b c = Triple a b c
 
 renderPage :: forall p i. Array (H.HTML p i) -> H.HTML p i
 renderPage contents =

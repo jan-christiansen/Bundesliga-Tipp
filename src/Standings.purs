@@ -15,20 +15,39 @@ import Network.HTTP.RequestHeader (RequestHeader(..))
 import Team
 
 
-standings :: forall eff. Int -> Aff (ajax :: AJAX | eff) (Either String (Array Team))
-standings _ = do
+requestData :: forall eff a. (JValue -> Either String a) -> Maybe Int -> Aff (ajax :: AJAX | eff) (Either String a)
+requestData parser mDay = do
   let reqHeader = RequestHeader "X-Auth-Token" "9d7d681dea7c4cf49b095d7cc1d8d9c5"
       req       = defaultRequest { headers = [reqHeader]
-                                 , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" }
+                                 , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" ++ matchdayQuery mDay }
   result <- affjax req
   let response = result.response
-  return (eitherDecode response >>= parseData)
+  return (eitherDecode response >>= parser)
+ where
+  matchdayQuery Nothing = ""
+  matchdayQuery (Just i) = "matchday=" ++ show i
 
-parseData :: JValue -> Either String (Array Team)
-parseData (JObject o) =
-  maybe (Left "No property standing") Right (M.lookup "standing" o) >>= parseStanding
-parseData _           =
+standings :: forall eff. Maybe Int -> Aff (ajax :: AJAX | eff) (Either String (Array Team))
+standings = requestData parseStandings
+
+matchdays :: forall eff. Aff (ajax :: AJAX | eff) (Either String Int)
+matchdays = requestData parseMatchday
+
+parseField :: String -> JValue -> Either String JValue
+parseField fieldName (JObject o) =
+  maybe (Left "No property standing") Right (M.lookup fieldName o)
+parseField _ _                   =
   Left "Data is not a object"
+
+parseMatchday :: JValue -> Either String Int
+parseMatchday jValue = parseField "matchday" jValue >>= parseInt
+
+parseInt :: JValue -> Either String Int
+parseInt (JInt i) = Right i
+parseInt _        = Left "Data is not an integer"
+
+parseStandings :: JValue -> Either String (Array Team)
+parseStandings jValue = parseField "standings" jValue >>= parseStanding
 
 parseStanding :: JValue -> Either String (Array Team)
 parseStanding (JArray a) = traverse parseTeam a
