@@ -143,7 +143,8 @@ ui = component render eval
       ]
   render (Tips player metric standings days) =
     renderPage
-      [ H.table [P.class_ (H.className "main-table") ]
+      [ renderMetrics metric
+      , H.table [P.class_ (H.className "main-table") ]
         [ H.tr_
           [ H.td [ P.class_ (H.className "nav-col") ]
                  [ H.h2_ [H.text (show player)]
@@ -151,9 +152,7 @@ ui = component render eval
                  ]
           , H.td [ P.class_ (H.className "content-col") ]
                  [tipTable metric (tipsForPlayer player) standings]
-          , H.td [ P.class_ (H.className "metric-col") ]
-                 [ renderMetrics metric ]
-          ]
+          , H.td_ [] ]
         ]
       , renderMatchdays days
       ]
@@ -212,15 +211,15 @@ renderPage contents =
 
 renderMatchdays :: forall p. Tuple Int Int -> H.HTML p (Input Unit)
 renderMatchdays (Tuple day maxDay) =
-  B.navPills
-    (map row (range 1 maxDay))
+  H.div [P.class_ (H.className "matchdays")]
+        [ B.navPills (map row (range 1 maxDay)) ]
  where
   row day' =
     Tuple (H.a [ E.onClick (E.input_ (SelectDay day')) ] [ H.text (show day') ]) (day==day')
 
 renderMetrics :: forall p. Metric -> H.HTML p (Input Unit)
 renderMetrics metric =
-  B.navPills
+  B.navTabs
     [ row "Manhattan" Manhattan 
     , row "Euklid" Euclid
     , row "Wulf" Wulf
