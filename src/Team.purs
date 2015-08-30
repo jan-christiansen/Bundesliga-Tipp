@@ -64,25 +64,3 @@ instance showTeam :: Show Team where
   show Berlin = "Hertha BSC Berlin"
   show Darmstadt = "SV Darmstadt 98"
   show Ingolstadt = "FC Ingolstadt 04"
-
-matchday :: Int -> Array Team
-matchday _ =
-  [ Bayern
-  , Dortmund
-  , Schalke
-  , Koeln
-  , Leverkusen
-  , Wolfsburg
-  , Berlin
-  , Ingolstadt
-  , Darmstadt
-  , Hannover
-  , Frankfurt
-  , Hoffenheim
-  , Augsburg
-  , Mainz
-  , Stuttgart
-  , Bremen
-  , Gladbach    
-  , Hamburg
-  ]

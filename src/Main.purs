@@ -174,10 +174,10 @@ ui = component render eval
       Right (Triple metric standings days) -> S.modify (\_ -> Tips player metric standings days)
     pure next
   eval (SelectDay day next) = do
-    standingsE <- liftFI (standings (Just day))
-    S.modify (case standingsE of
+    tableE <- liftFI (leagueTable (Just day))
+    S.modify (case tableE of
                 Left text -> const (Error text)
-                Right standings -> selectDay standings)
+                Right table -> selectDay (standings table))
     pure next
    where
     selectDay standings (Tips p m _ (Tuple _ max))  = Tips p m standings (Tuple day max)
@@ -197,12 +197,10 @@ ui = component render eval
   currentState (Players metric standings days) = return (Right (Triple metric standings days))
   currentState _ = do
     S.modify (\_ -> Loading)
-    maxDayE <- liftFI matchdays
-    standingsE <- liftFI (standings Nothing)
+    tableE <- liftFI (leagueTable Nothing)
     return (do
-       maxDay <- maxDayE
-       standings <- standingsE
-       return (Triple initialMetric standings (Tuple maxDay maxDay)))
+       LeagueTable maxDay sts <- tableE
+       return (Triple initialMetric sts (Tuple maxDay maxDay)))
 
 data Triple a b c = Triple a b c
 

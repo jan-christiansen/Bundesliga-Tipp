@@ -14,24 +14,29 @@ import Network.HTTP.RequestHeader (RequestHeader(..))
 
 import Team
 
+data LeagueTable = LeagueTable Int (Array Team)
 
-requestData :: forall eff a. (JValue -> Either String a) -> Maybe Int -> Aff (ajax :: AJAX | eff) (Either String a)
-requestData parser mDay = do
+matchday :: LeagueTable -> Int
+matchday (LeagueTable day _) = day
+
+standings :: LeagueTable -> Array Team
+standings (LeagueTable _ sts) = sts
+
+leagueTable :: forall eff a. Maybe Int -> Aff (ajax :: AJAX | eff) (Either String LeagueTable)
+leagueTable mDay = do
   let reqHeader = RequestHeader "X-Auth-Token" "9d7d681dea7c4cf49b095d7cc1d8d9c5"
       req       = defaultRequest { headers = [reqHeader]
                                  , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" ++ matchdayQuery mDay }
   result <- affjax req
   let response = result.response
-  return (eitherDecode response >>= parser)
+  return (do
+    decoded <- eitherDecode response
+    matchday <- parseMatchday decoded
+    standings <- parseStandings decoded
+    return (LeagueTable matchday standings))
  where
   matchdayQuery Nothing = ""
   matchdayQuery (Just i) = "?matchday=" ++ show i
-
-standings :: forall eff. Maybe Int -> Aff (ajax :: AJAX | eff) (Either String (Array Team))
-standings = requestData parseStandings
-
-matchdays :: forall eff. Aff (ajax :: AJAX | eff) (Either String Int)
-matchdays = requestData parseMatchday Nothing
 
 parseField :: String -> JValue -> Either String JValue
 parseField fieldName (JObject o) =
