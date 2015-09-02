@@ -14,6 +14,7 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (print)
 import Control.Monad.Free (liftFI)
 import Data.Foldable (foldr)
+import Data.Traversable (for)
 import Math (abs, round, pow)
 import Data.Int (toNumber, fromNumber)
 import Data.Array
@@ -137,23 +138,23 @@ ui = component render eval
     let entries = entriesForStandings metric standings
     in
     renderPage
-      [ renderMetrics metric
-      , H.div [P.class_ (H.className "bs-example")] [pointsTable entries]
+      [ renderCurrentTable standings
+      , renderMetrics metric
+      , H.div [P.class_ (H.className "main-content")]
+              [ H.div [P.class_ (H.className "bs-example")] [pointsTable entries] ]
       , renderMatchdays days
       ]
   render (Tips player metric standings days) =
     renderPage
-      [ renderMetrics metric
-      , H.table [P.class_ (H.className "main-table") ]
-        [ H.tr_
-          [ H.td [ P.class_ (H.className "nav-col") ]
-                 [ H.h2_ [H.text (show player)]
-                 , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
-                 ]
-          , H.td [ P.class_ (H.className "content-col") ]
-                 [tipTable metric (tipsForPlayer player) standings]
-          , H.td_ [] ]
-        ]
+      [ renderCurrentTable standings
+      , renderMetrics metric
+      , H.div [P.class_ (H.className "main-content")]
+              [ H.div [ P.class_ (H.className "players-nav") ]
+                      [ H.h2_ [H.text (show player)]
+                      , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
+                      ]
+              , H.div [P.class_ (H.className "bs-example")] [tipTable metric (tipsForPlayer player) standings]
+              ]
       , renderMatchdays days
       ]
 
@@ -206,8 +207,8 @@ data Triple a b c = Triple a b c
 renderPage :: forall p i. Array (H.HTML p i) -> H.HTML p i
 renderPage contents =
   H.div [P.class_ (H.className "content")]
-    ((H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"])
-     : contents)
+    ( H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"]
+    : contents )
 
 renderMatchdays :: forall p. Tuple Int Int -> H.HTML p (Input Unit)
 renderMatchdays (Tuple day maxDay) =
@@ -265,7 +266,7 @@ tipTable metric tip standings =
     H.tr
       [rowColor dist t]
       [ H.td_ [H.text (show i)]
-      , H.td_ [H.text (show team)]
+      , H.td_ [H.text (pretty team)]
       , H.td_ [H.text (showNumber p 1)] ]
 
 rowColor :: forall i. Int -> Trend -> H.Prop i
@@ -276,6 +277,19 @@ rowColor dist trend =
   trendClass Worse   = "worse"
   trendClass Better  = "better"
   distClass i = "dist-" ++ show i
+
+
+renderCurrentTable :: forall p i. Array Team -> H.HTML p i
+renderCurrentTable standings =
+  H.div [P.class_ (H.className "current-table")]
+        [ H.div [P.class_ (H.className "current-table-row")] (take 9 icons)
+        , H.div [P.class_ (H.className "current-table-row")] (drop 9 icons)
+        , H.div [P.class_ (H.className "clear")] [] ]
+ where
+  icons = map icon standings
+  icon team =
+    H.div [P.class_ (H.className "team")]
+          [H.img [P.src ("images/" ++ show team ++ ".svg"), P.class_ (H.className "icon")]]
 
 
 showNumber :: Number -> Int -> String

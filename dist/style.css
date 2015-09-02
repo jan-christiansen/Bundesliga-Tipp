@@ -10,20 +10,43 @@ caption {
     margin: 25px 25px 25px 25px;
 }
 
+.main-content {
+    position: relative;
+}
+
 .main-table {
     width: 100%;
     table-layout : fixed;
 }
 
-.matchdays {
-    text-align: center;
-    /* width: 400px; */
-    /* margin-left: -200px; */
-    /* left: 50%; */
-    /* position: relative; */
-    /* text:center; */
+.current-table-row {
+    float: left;
+    min-width: 400px;
+    width: 50%;
+    margin-bottom: 25px;
 }
 
+@media (max-width: 850px) {
+    .current-table-row {
+        width: 100%;
+    }
+}
+
+.team {
+    display: inline-block;
+    width: 11.1%;
+    min-width: 40px;
+    text-align: center;
+}
+
+.icon {
+    max-width: 32px;
+    max-height: 32px;
+}
+
+.matchdays {
+    text-align: center;
+}
 
 .nav-pills {
     display: inline-block;
@@ -35,15 +58,30 @@ caption {
 }
 
 .nav-col {
-  vertical-align: top;
+    vertical-align: top;
 }
 
-.content-col {
-    width: 400px;
+.players-nav {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50%;
+    padding-right: 225px;
+}
+
+@media (max-width: 800px) {
+    .players-nav {
+        position: relative;
+        width: 100%;
+        padding-right: 0;
+    }
+}
+
+.content-col td {
+    width: 150px;
 }
 
 .metric-col {
-
     vertical-align: top;
     float: right;
 }
