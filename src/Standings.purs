@@ -25,26 +25,19 @@ standings (LeagueTable _ sts) = sts
 
 leagueTable :: forall eff a. Maybe Int -> Aff (ajax :: AJAX | eff) (Either String LeagueTable)
 leagueTable mDay = do
-  return (Right (LeagueTable 1
-   [ Bayern, Leverkusen, Dortmund
-   , Wolfsburg, Mainz, Schalke
-   , Gladbach, Hannover, Hoffenheim
-   , Stuttgart, Hamburg, Bremen
-   , Augsburg, Frankfurt, Koeln
-   , Berlin, Darmstadt, Ingolstadt ]))
- --  let reqHeader = RequestHeader "X-Auth-Token" "9d7d681dea7c4cf49b095d7cc1d8d9c5"
- --      req       = defaultRequest { headers = [reqHeader]
- --                                 , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" ++ matchdayQuery mDay }
- --  result <- affjax req
- --  let response = result.response
- --  return (do
- --    decoded <- eitherDecode response
- --    matchday <- parseMatchday decoded
- --    standings <- parseStandings decoded
- --    return (LeagueTable matchday standings))
- -- where
- --  matchdayQuery Nothing = ""
- --  matchdayQuery (Just i) = "?matchday=" ++ show i
+  let reqHeader = RequestHeader "X-Auth-Token" "9d7d681dea7c4cf49b095d7cc1d8d9c5"
+      req       = defaultRequest { headers = [reqHeader]
+                                 , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" ++ matchdayQuery mDay }
+  result <- affjax req
+  let response = result.response
+  return (do
+    decoded <- eitherDecode response
+    matchday <- parseMatchday decoded
+    standings <- parseStandings decoded
+    return (LeagueTable matchday standings))
+ where
+  matchdayQuery Nothing = ""
+  matchdayQuery (Just i) = "?matchday=" ++ show i
 
 parseField :: String -> JValue -> Either String JValue
 parseField fieldName jvalue@(JObject o) =
