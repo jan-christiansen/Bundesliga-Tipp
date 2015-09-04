@@ -6,14 +6,10 @@ module Main where
 import Prelude
 
 import Control.Bind ((=<<))
-import Control.Alt ((<|>))
-import Control.Plus (empty)
-import Control.Apply ((*>))
 import Control.Monad.Aff (Aff(), launchAff, later')
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (print)
 import Control.Monad.Free (liftFI)
-import Data.Foldable (foldr)
 import Data.Traversable (for)
 import Math (abs, round, pow)
 import Data.Int (toNumber, fromNumber)
@@ -22,8 +18,8 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Either
 import Data.Function (on)
 import Data.Tuple (Tuple(..))
-
 import Control.Monad.Eff.Class (MonadEff, liftEff)
+
 import Halogen
 import qualified Halogen.Query.StateF as S
 import Halogen.Util (appendToBody)
@@ -37,53 +33,15 @@ import DOM.Event.Types (Event())
 import DOM.HTML (window)
 import DOM.HTML.Document (body)
 import DOM.HTML.Types (HTMLElement(), htmlElementToNode, windowToEventTarget)
-
 import Network.HTTP.Affjax (AJAX(), get)
+import Routing (matches)
 
-import Routing
-import Routing.Match
-import Routing.Match.Class
-
+import Routes
 import Team
 import Player
 import Tip
 import Standings
 import qualified Bootstrap as B
-
-
--- Routing
-
-data Route = PlayersRoute | TipsRoute Player
-
-reverseRoute :: Route -> String
-reverseRoute PlayersRoute  = "#"
-reverseRoute (TipsRoute p) = "#" ++ playerLit p
-
-routing :: Match Route
-routing =
-  const PlayersRoute <$> lit ""
-    <|>
-  TipsRoute <$> routingPlayer
-
-routingPlayer :: Match Player
-routingPlayer =
-  foldr (<|>) empty (map (\p -> const p <$> lit (playerLit p)) allPlayers)
-
-playerLit :: Player -> String
-playerLit JanWulf = "janw"
-playerLit Jan = "jan"
-playerLit JR = "jr"
-playerLit Christoph = "christoph"
-playerLit Johannes = "johannes"
-playerLit Julia = "julia"
-playerLit Daniel = "daniel"
-playerLit Mirko = "mirko"
-playerLit Ulf = "ulf"
-playerLit Sandra = "sandra"
-playerLit Maike = "maike"
-playerLit Nikita = "nikita"
-playerLit Henning = "henning"
-playerLit Spiegel = "spiegel"
 
 
 -- Main Application
@@ -113,11 +71,31 @@ data Input a =
   | Overview a
   | Use Metric a
 
+type MatchdayState =
+  { standings :: Array Team
+  , currentMatchday :: Matchday
+  , maxMatchday :: Matchday
+  }
+
 data State =
     Loading
   | Error String
-  | Players Metric (Array Team) (Tuple Matchday Int)
-  | Tips Player Metric (Array Team) (Tuple Matchday Int)
+  | Players Metric MatchdayState
+  | Tips Player Metric MatchdayState
+
+updateMatchday :: Array Team -> Matchday -> State -> State
+updateMatchday _ _ l@Loading   = l
+updateMatchday _ _ e@(Error _) = e
+updateMatchday standings day (Tips p m s) =
+  Tips p m { standings: standings, currentMatchday: day, maxMatchday: s.maxMatchday }
+updateMatchday standings day (Players m s) =
+  Players m { standings: standings, currentMatchday: day, maxMatchday: s.maxMatchday }
+
+updateMetric :: Metric -> State -> State
+updateMetric _      l@Loading     = l
+updateMetric _      e@(Error _)   = e
+updateMetric metric (Tips p _ s)  = Tips p metric s
+updateMetric metric (Players _ s) = Players metric s
 
 
 initialState :: State
@@ -126,83 +104,82 @@ initialState = Loading
 initialMetric :: Metric
 initialMetric = Manhattan
 
+metric :: State -> Metric
+metric (Tips _ metric _ )  = metric
+metric (Players metric _ ) = metric
+metric _                   = initialMetric
+
+matchdayState :: forall eff a. State -> Aff (ajax :: AJAX | eff) (Either String MatchdayState)
+matchdayState (Tips _ _ state)  = return (Right state)
+matchdayState (Players _ state) = return (Right state)
+matchdayState _ = do
+  tableE <- leagueTable Nothing
+  return (do
+    LeagueTable maxDay sts <- tableE
+    return { standings: sts, currentMatchday: maxDay, maxMatchday: maxDay })
+
+
 ui :: forall eff p. Component State Input (Aff AppEffects) p
 ui = component render eval
- where
-  render :: Render State Input p
-  render Loading =
-    renderPage [H.h1_ [H.text "Loading Data..."]]
-  render (Error text) =
-    renderPage [H.text ("An error occurred: " ++ text)]
-  render (Players metric standings days) =
-    let entries = entriesForStandings metric standings
-    in
-    renderPage
-      [ renderCurrentTable standings
-      , renderMetrics metric
-      , H.div [P.class_ (H.className "main-content")]
-              [ H.div [P.class_ (H.className "bs-example")] [pointsTable entries] ]
-      , renderMatchdays days
-      ]
-  render (Tips player metric standings days) =
-    renderPage
-      [ renderCurrentTable standings
-      , renderMetrics metric
-      , H.div [P.class_ (H.className "main-content")]
-              [ H.div [ P.class_ (H.className "players-nav") ]
-                      [ H.h2_ [H.text (show player)]
-                      , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
-                      ]
-              , H.div [P.class_ (H.className "bs-example")] [tipTable metric (tipsForPlayer player) standings]
-              ]
-      , renderMatchdays days
-      ]
 
-  eval :: Eval Input State Input (Aff AppEffects)
-  eval (Overview next) = do
-    s <- S.get
-    stateE <- currentState s
-    case stateE of
-      Left text -> S.modify (\_ -> Error text)
-      Right (Triple metric standings days) -> S.modify (\_ -> Players metric standings days)
-    pure next
-  eval (SelectPlayer player next) = do
-    s <- S.get
-    stateE <- currentState s
-    case stateE of
-      Left text   -> S.modify (\_ -> Error text)
-      Right (Triple metric standings days) -> S.modify (\_ -> Tips player metric standings days)
-    pure next
-  eval (SelectDay day next) = do
-    tableE <- liftFI (leagueTable (Just day))
-    S.modify (case tableE of
-                Left text -> const (Error text)
-                Right table -> selectDay (standings table))
-    pure next
-   where
-    selectDay standings (Tips p m _ (Tuple _ max))  = Tips p m standings (Tuple day max)
-    selectDay standings (Players m _ (Tuple _ max)) = Players m standings (Tuple day max)
-    selectDay _ (Error t)        = Error t
-    selectDay _ Loading          = Loading
-  eval (Use metric next) = do
-    S.modify (evalMetric metric)
-    pure next
+render :: forall p. Render State Input p
+render Loading =
+  renderPage [H.h1_ [H.text "Loading Data..."]]
+render (Error text) =
+  renderPage [H.text ("An error occurred: " ++ text)]
+render (Players metric s) =
+  let entries = entriesForStandings metric s.standings
+  in
+  renderPage
+    [ renderCurrentTable s.standings
+    , renderMetrics metric
+    , H.div [P.class_ (H.className "main-content")]
+            [ H.div [P.class_ (H.className "bs-example")] [pointsTable entries] ]
+    , renderMatchdays s
+    ]
+render (Tips player metric s) =
+  renderPage
+    [ renderCurrentTable s.standings
+    , renderMetrics metric
+    , H.div [P.class_ (H.className "main-content")]
+            [ H.div [ P.class_ (H.className "players-nav") ]
+                    [ H.h2_ [H.text (show player)]
+                    , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
+                    ]
+            , H.div [P.class_ (H.className "bs-example")] [tipTable metric (tipsForPlayer player) s.standings]
+            ]
+    , renderMatchdays s
+    ]
 
-  evalMetric _ Loading = Loading
-  evalMetric _ (Error t) = Error t
-  evalMetric metric (Tips p _ standings days) = Tips p metric standings days
-  evalMetric metric (Players _ standings days) = Players metric standings days
+eval :: Eval Input State Input (Aff AppEffects)
+eval (Overview next) = do
+  s <- S.get
+  S.modify (const Loading)
+  stateE <- liftFI (matchdayState s)
+  case stateE of
+    Left text       -> S.modify (\_ -> Error text)
+    Right matchdayS -> S.modify (\_ -> Players (metric s) matchdayS)
+  pure next
+eval (SelectPlayer player next) = do
+  s <- S.get
+  S.modify (const Loading)
+  stateE <- liftFI (matchdayState s)
+  case stateE of
+    Left text       -> S.modify (\_ -> Error text)
+    Right matchdayS -> S.modify (\_ -> Tips player (metric s) matchdayS)
+  pure next
+eval (SelectDay day next) = do
+  s <- S.get
+  S.modify (const Loading)
+  tableE <- liftFI (leagueTable (Just day))
+  S.modify (\_ -> case tableE of
+                    Left text   -> Error text
+                    Right table -> updateMatchday (standings table) day s)
+  pure next
+eval (Use metric next) = do
+  S.modify (updateMetric metric)
+  pure next
 
-  currentState (Tips _ metric standings days)  = return (Right (Triple metric standings days))
-  currentState (Players metric standings days) = return (Right (Triple metric standings days))
-  currentState _ = do
-    S.modify (\_ -> Loading)
-    tableE <- liftFI (leagueTable Nothing)
-    return (do
-       LeagueTable maxDay sts <- tableE
-       return (Triple initialMetric sts (Tuple maxDay maxDay)))
-
-data Triple a b c = Triple a b c
 
 renderPage :: forall p i. Array (H.HTML p i) -> H.HTML p i
 renderPage contents =
@@ -210,13 +187,15 @@ renderPage contents =
     ( H.h1 [P.class_ (H.className "jumbotron")] [H.text "Saison Spektakel 2015/16"]
     : contents )
 
-renderMatchdays :: forall p. Tuple Int Int -> H.HTML p (Input Unit)
-renderMatchdays (Tuple day maxDay) =
+renderMatchdays :: forall p. MatchdayState -> H.HTML p (Input Unit)
+renderMatchdays s =
   H.div [P.class_ (H.className "matchdays")]
-        [ B.navPills (map row (range 1 maxDay)) ]
+        [ B.navPills (map row (range 1 s.maxMatchday)) ]
  where
   row day' =
-    Tuple (H.a [ E.onClick (E.input_ (SelectDay day')) ] [ H.text (show day') ]) (day==day')
+    Tuple
+      (H.a [ E.onClick (E.input_ (SelectDay day')) ] [ H.text (show day') ])
+      (s.currentMatchday==day')
 
 renderMetrics :: forall p. Metric -> H.HTML p (Input Unit)
 renderMetrics metric =
@@ -278,7 +257,6 @@ rowColor dist trend =
   trendClass Better  = "better"
   distClass i = "dist-" ++ show i
 
-
 renderCurrentTable :: forall p i. Array Team -> H.HTML p i
 renderCurrentTable standings =
   H.div [P.class_ (H.className "current-table")]
@@ -289,8 +267,10 @@ renderCurrentTable standings =
   icons = map icon standings
   icon team =
     H.div [P.class_ (H.className "team")]
-          [H.img [P.src ("images/" ++ show team ++ ".svg"), P.class_ (H.className "icon")]]
-
+          [H.img [ P.src ("images/" ++ show team ++ ".svg")
+                 , P.class_ (H.className "icon")
+                 ]
+          ]
 
 showNumber :: Number -> Int -> String
 showNumber p d = show (roundTo p d)
