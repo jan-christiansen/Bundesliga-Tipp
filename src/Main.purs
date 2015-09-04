@@ -260,10 +260,10 @@ rowColor dist trend =
 renderCurrentTable :: forall p i. Array Team -> H.HTML p i
 renderCurrentTable standings =
   H.div [P.class_ (H.className "current-table")]
-        [ H.div [P.class_ (H.className "current-table-row")] (take 9 icons)
-        , H.div [P.class_ (H.className "current-table-row")] (drop 9 icons)
-        , H.div [P.class_ (H.className "clear")] [] ]
+        (map row (chunks 3 icons) ++
+        [ H.div [P.class_ (H.className "clear")] [] ])
  where
+  row icons = H.div [P.class_ (H.className "current-table-row")] icons
   icons = map icon standings
   icon team =
     H.div [P.class_ (H.className "team")]
@@ -271,6 +271,10 @@ renderCurrentTable standings =
                  , P.class_ (H.className "icon")
                  ]
           ]
+
+chunks :: forall a. Int -> Array a -> Array (Array a)
+chunks _ [] = []
+chunks i xs = take i xs : chunks i (drop i xs)
 
 showNumber :: Number -> Int -> String
 showNumber p d = show (roundTo p d)

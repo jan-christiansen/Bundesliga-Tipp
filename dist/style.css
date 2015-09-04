@@ -21,20 +21,27 @@ caption {
 
 .current-table-row {
     float: left;
-    min-width: 400px;
-    width: 50%;
+    min-width: 200px;
+    width: 16.66%;
     margin-bottom: 25px;
 }
 
-@media (max-width: 850px) {
+
+@media (max-width: 1250px) {
     .current-table-row {
-        width: 100%;
+        width: 33.33%;
+    }
+}
+
+@media (max-width: 650px) {
+    .current-table-row {
+        width: 50%;
     }
 }
 
 .team {
     display: inline-block;
-    width: 11.1%;
+    width: 33.33%;
     min-width: 40px;
     text-align: center;
 }
