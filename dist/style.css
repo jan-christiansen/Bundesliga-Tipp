@@ -21,19 +21,19 @@ caption {
 
 .current-table-row {
     float: left;
-    min-width: 200px;
+    min-width: 120px;
     width: 16.66%;
     margin-bottom: 25px;
 }
 
 
-@media (max-width: 1250px) {
+@media (max-width: 770px) {
     .current-table-row {
         width: 33.33%;
     }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 410px) {
     .current-table-row {
         width: 50%;
     }
