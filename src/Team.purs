@@ -2,8 +2,9 @@ module Team where
 
 
 import Prelude
+import Util
 
-       
+
 data Team =
     Bayern
   | Leverkusen
@@ -65,22 +66,42 @@ instance showTeam :: Show Team where
   show Darmstadt = "Darmstadt"
   show Ingolstadt = "Ingolstadt"
 
-pretty :: Team -> String
-pretty Bayern = "FC Bayern München"
-pretty Leverkusen = "Bayer 04 Leverkusen"
-pretty Dortmund = "BVB Borussia Dortmund"
-pretty Wolfsburg = "VfL Wolfsburg"
-pretty Mainz = "FSV Mainz 05"
-pretty Schalke = "FC Schalke 04"
-pretty Gladbach = "Borussia Mönchengladbach"
-pretty Hannover = "Hannover 96"
-pretty Hoffenheim = "TSV 1899 Hoffenheim"
-pretty Stuttgart = "VfB Stuttgart"
-pretty Hamburg = "Hamburger SV"
-pretty Bremen = "SV Werder Bremen"
-pretty Augsburg = "FC Augsburg"
-pretty Frankfurt = "Eintracht Frankfurt"
-pretty Koeln = "1.FC Köln"
-pretty Berlin = "Hertha BSC Berlin"
-pretty Darmstadt = "SV Darmstadt 98"
-pretty Ingolstadt = "FC Ingolstadt 04"
+instance prettyTeam :: Pretty Team where
+  pretty Bayern = "FC Bayern München"
+  pretty Leverkusen = "Bayer 04 Leverkusen"
+  pretty Dortmund = "BVB Borussia Dortmund"
+  pretty Wolfsburg = "VfL Wolfsburg"
+  pretty Mainz = "FSV Mainz 05"
+  pretty Schalke = "FC Schalke 04"
+  pretty Gladbach = "Borussia Mönchengladbach"
+  pretty Hannover = "Hannover 96"
+  pretty Hoffenheim = "TSG 1899 Hoffenheim"
+  pretty Stuttgart = "VfB Stuttgart"
+  pretty Hamburg = "Hamburger SV"
+  pretty Bremen = "SV Werder Bremen"
+  pretty Augsburg = "FC Augsburg"
+  pretty Frankfurt = "SG Eintracht Frankfurt"
+  pretty Koeln = "1.FC Köln"
+  pretty Berlin = "Hertha BSC Berlin"
+  pretty Darmstadt = "SV Darmstadt 98"
+  pretty Ingolstadt = "FC Ingolstadt 04"
+
+short :: Team -> String
+short Bayern = "FCB"
+short Leverkusen = "B04"
+short Dortmund = "BVB"
+short Wolfsburg = "WOB"
+short Mainz = "M05"
+short Schalke = "S04"
+short Gladbach = "BMG"
+short Hannover = "H96"
+short Hoffenheim = "TSG"
+short Stuttgart = "VFB"
+short Hamburg = "HSV"
+short Bremen = "SVW"
+short Augsburg = "FCA"
+short Frankfurt = "SGE"
+short Koeln = "1.FC"
+short Berlin = "BSC"
+short Darmstadt = "D98"
+short Ingolstadt = "I04"

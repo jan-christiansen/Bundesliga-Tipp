@@ -3,6 +3,8 @@ module Player where
 
 import Prelude
 
+import Util
+
 
 data Player =
     JanWulf
@@ -21,7 +23,7 @@ data Player =
   | Spiegel
 
 instance showPlayer :: Show Player where
-  show JanWulf = "Jan W."
+  show JanWulf = "JanWulf"
   show Jan = "Jan"
   show JR = "JR"
   show Christoph = "Christoph"
@@ -32,9 +34,26 @@ instance showPlayer :: Show Player where
   show Ulf = "Ulf"
   show Sandra = "Sandra"
   show Maike = "Maike"
-  show Nikita = "Nikita (alias Zufallstipp)"
-  show Henning = "Prof. Henning"
-  show Spiegel = "Spiegel.de-Prognose"
+  show Nikita = "Nikita"
+  show Henning = "Henning"
+  show Spiegel = "Spiegel"
+
+instance prettyPlayer :: Pretty Player where
+  pretty JanWulf = "Jan W."
+  pretty Jan = "Jan"
+  pretty JR = "JR"
+  pretty Christoph = "Christoph"
+  pretty Johannes = "Johannes"
+  pretty Julia = "Julia"
+  pretty Daniel = "Daniel"
+  pretty Mirko = "Mirko"
+  pretty Ulf = "Ulf"
+  pretty Sandra = "Sandra"
+  pretty Maike = "Maike"
+  pretty Nikita = "Nikita (alias Zufallstipp)"
+  pretty Henning = "Prof. Henning"
+  pretty Spiegel = "Spiegel.de-Prognose"
+
 
 allPlayers :: Array Player
 allPlayers =
