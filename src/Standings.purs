@@ -14,6 +14,7 @@ import Network.HTTP.Affjax (AJAX(), defaultRequest, affjax)
 import Network.HTTP.RequestHeader (RequestHeader(..))
 import Preface ((++))
 import Team
+import Season
 
 data LeagueTable = LeagueTable Int (Array Team)
 
@@ -23,18 +24,22 @@ matchday (LeagueTable day _) = day
 standings :: LeagueTable -> Array Team
 standings (LeagueTable _ sts) = sts
 
-leagueTable :: forall eff a. Maybe Int -> Aff (ajax :: AJAX | eff) (Either String LeagueTable)
-leagueTable mDay = do
+seasonToPath :: Season -> String
+seasonToPath Season1516 = "394"
+seasonToPath Season1617 = "430"
+
+leagueTable :: forall eff. Season -> Maybe Int -> Aff (ajax :: AJAX | eff) (Either String LeagueTable)
+leagueTable s mDay = do
   let reqHeader = RequestHeader "X-Auth-Token" "9d7d681dea7c4cf49b095d7cc1d8d9c5"
       req       = defaultRequest { headers = [reqHeader]
-                                 , url = "http://api.football-data.org/alpha/soccerseasons/394/leagueTable" ++ matchdayQuery mDay }
+                                 , url = "http://api.football-data.org/alpha/soccerseasons/" ++ seasonToPath s ++ "/leagueTable" ++ matchdayQuery mDay }
   result <- affjax req
   let response = result.response
-  return (do
+  pure (do
     decoded <- eitherDecode response
     matchday <- parseMatchday decoded
     standings <- parseStandings decoded
-    return (LeagueTable matchday standings))
+    pure (LeagueTable matchday standings))
  where
   matchdayQuery Nothing = ""
   matchdayQuery (Just i) = "?matchday=" ++ show i
@@ -86,6 +91,8 @@ parseTeamName "VfB Stuttgart" = Right Stuttgart
 parseTeamName "Werder Bremen" = Right Bremen
 parseTeamName "Bor. Mönchengladbach" = Right Gladbach    
 parseTeamName "Hamburger SV" = Right Hamburg
+parseTeamName "SC Freiburg" = Right Freiburg
+parseTeamName "Red Bull Leipzig" = Right Leipzig
 parseTeamName name = Left ("TeamName \"" ++ name ++ "\" cannot be parsed")
 
 
@@ -96,7 +103,7 @@ icon teamNo = do
                                  , url = "http://api.football-data.org/alpha/teams/" ++ show teamNo }
   result <- affjax req
   let response = result.response
-  return (do
+  pure (do
     decoded <- eitherDecode response
     parseSvgUrl decoded)
 
@@ -105,7 +112,7 @@ parseSvgUrl jValue = do
   value <- parseField "crestUrl" jValue
   code <- parseCode value
   url <- parseUrl value
-  return (Tuple code url)
+  pure (Tuple code url)
 
 parseCode :: JValue -> Either String String
 parseCode (JString code) = Right code

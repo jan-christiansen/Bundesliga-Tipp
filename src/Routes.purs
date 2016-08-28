@@ -1,32 +1,43 @@
 module Routes where
 
-import Prelude
 import Control.Alt ((<|>))
 import Control.Plus (empty)
 import Data.Foldable (foldr)
 
-import Routing
-import Routing.Match
-import Routing.Match.Class
+-- import Routing
+import Routing.Match (Match)
+import Routing.Match.Class (lit)
 
 import Preface ((++))
-
-import Player
+import Prelude (const, map, (<$>), (<*>), (<*), (*>), class Show)
+import Player (Player(..), allPlayers)
+import Season
 
 
 -- Routing
 
-data Route = PlayersRoute | TipsRoute Player
+data Route = PlayersRoute Season | TipsRoute Season Player
+
+instance showRoute :: Show Route where
+  show = reverseRoute
 
 reverseRoute :: Route -> String
-reverseRoute PlayersRoute  = "#"
-reverseRoute (TipsRoute p) = "#" ++ playerLit p
+reverseRoute (PlayersRoute s)  = "#/" ++ seasonLit s
+reverseRoute (TipsRoute s p) = "#/" ++ seasonLit s ++ "/" ++ playerLit p
+
+seasonLit :: Season -> String
+seasonLit Season1516 = "2015"
+seasonLit Season1617 = "2016"
 
 routing :: Match Route
 routing =
-  const PlayersRoute <$> lit ""
+  TipsRoute <$> routingSeason <*> routingPlayer
     <|>
-  TipsRoute <$> routingPlayer
+  PlayersRoute <$> routingSeason
+
+routingSeason :: Match Season
+routingSeason = lit "" *>
+    foldr (<|>) empty (map (\s -> const s <$> lit (seasonLit s)) allSeasons)
 
 routingPlayer :: Match Player
 routingPlayer =
@@ -47,3 +58,11 @@ playerLit Maike = "maike"
 playerLit Nikita = "nikita"
 playerLit Henning = "henning"
 playerLit Spiegel = "spiegel"
+playerLit Jens = "jens"
+playerLit Thorsten = "thorsten"
+playerLit Torsten = "torsten"
+playerLit Arvid = "arvid"
+playerLit Marcellus = "marcellus"
+playerLit Sebastian = "sebastian"
+playerLit Stefan = "stefan"
+playerLit Svenja = "svenja"

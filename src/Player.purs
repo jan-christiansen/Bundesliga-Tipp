@@ -3,6 +3,7 @@ module Player where
 
 import Prelude
 
+import Season
 import Util
 
 
@@ -21,6 +22,14 @@ data Player =
   | Nikita
   | Henning
   | Spiegel
+  | Jens
+  | Thorsten
+  | Torsten
+  | Arvid
+  | Marcellus
+  | Sebastian
+  | Stefan
+  | Svenja
 
 instance showPlayer :: Show Player where
   show JanWulf = "JanWulf"
@@ -37,6 +46,14 @@ instance showPlayer :: Show Player where
   show Nikita = "Nikita"
   show Henning = "Henning"
   show Spiegel = "Spiegel"
+  show Jens = "Jens"
+  show Thorsten = "Thorsten"
+  show Torsten = "Torsten"
+  show Arvid = "Arvid"
+  show Marcellus = "Marcellus"
+  show Sebastian = "Sebastian"
+  show Stefan = "Stefan"
+  show Svenja = "Svenja"
 
 instance prettyPlayer :: Pretty Player where
   pretty JanWulf = "Jan W."
@@ -53,6 +70,14 @@ instance prettyPlayer :: Pretty Player where
   pretty Nikita = "Nikita (alias Zufallstipp)"
   pretty Henning = "Prof. Henning"
   pretty Spiegel = "Spiegel.de-Prognose"
+  pretty Jens = "Jens"
+  pretty Thorsten = "Thorsten"
+  pretty Torsten = "Torsten"
+  pretty Arvid = "Arvid"
+  pretty Marcellus = "Marcellus"
+  pretty Sebastian = "Sebastian"
+  pretty Stefan = "Stefan (alias Ahnungslosertipp)"
+  pretty Svenja = "Svenja"
 
 
 allPlayers :: Array Player
@@ -71,4 +96,49 @@ allPlayers =
   , Nikita
   , Henning
   , Spiegel
+  , Jens
+  , Thorsten
+  , Torsten
+  , Arvid
+  , Marcellus
+  , Sebastian
+  , Stefan
+  , Svenja
   ]
+
+allPlayersForSeason :: Season -> Array Player
+allPlayersForSeason Season1516 =
+  [ JanWulf
+  , Jan
+  , JR
+  , Christoph
+  , Johannes
+  , Julia
+  , Daniel
+  , Mirko
+  , Ulf
+  , Sandra
+  , Maike
+  , Nikita
+  , Henning
+  , Spiegel
+  ]
+allPlayersForSeason Season1617 =
+  [ JanWulf
+  , Jan
+  , JR
+  , Johannes
+  , Julia
+  , Daniel
+  , Sandra
+  , Nikita
+  , Jens
+  , Thorsten
+  , Torsten
+  , Arvid
+  , Marcellus
+  , Sebastian
+  , Stefan
+  , Svenja
+  ]
+           

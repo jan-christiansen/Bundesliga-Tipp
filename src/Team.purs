@@ -24,6 +24,8 @@ data Team =
   | Berlin
   | Darmstadt
   | Ingolstadt
+  | Freiburg
+  | Leipzig
 
 instance eqTeam :: Eq Team where
   eq Bayern Bayern = true
@@ -43,7 +45,9 @@ instance eqTeam :: Eq Team where
   eq Koeln Koeln = true
   eq Berlin Berlin = true
   eq Darmstadt Darmstadt = true
-  eq Ingolstadt Ingolstadt = true  
+  eq Ingolstadt Ingolstadt = true
+  eq Freiburg Freiburg = true
+  eq Leipzig Leipzig = true
   eq _ _ = false
 
 instance showTeam :: Show Team where
@@ -65,6 +69,8 @@ instance showTeam :: Show Team where
   show Berlin = "Berlin"
   show Darmstadt = "Darmstadt"
   show Ingolstadt = "Ingolstadt"
+  show Leipzig = "Leipzig"
+  show Freiburg = "Freiburg"
 
 instance prettyTeam :: Pretty Team where
   pretty Bayern = "FC Bayern München"
@@ -85,6 +91,8 @@ instance prettyTeam :: Pretty Team where
   pretty Berlin = "Hertha BSC Berlin"
   pretty Darmstadt = "SV Darmstadt 98"
   pretty Ingolstadt = "FC Ingolstadt 04"
+  pretty Freiburg = "SC Freiburg"
+  pretty Leipzig = "RB Leipzig"
 
 short :: Team -> String
 short Bayern = "FCB"
@@ -105,3 +113,5 @@ short Koeln = "1.FC"
 short Berlin = "BSC"
 short Darmstadt = "D98"
 short Ingolstadt = "I04"
+short Leipzig = "RBL"
+short Freiburg = "SCF"

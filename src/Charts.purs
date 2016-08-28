@@ -1,42 +1,33 @@
 module Charts where
 
 
-import Prelude
+import Prelude (map, show, compare, pure, bind, (>>>), ($), (>=), (==), (-))
 import Control.Apply ((*>))
 import Control.Monad.Eff (Eff())
-import Data.Array (zipWith, range, length, filter, head, uncons, sortBy)
+import Data.Array (length, sortBy, filter, range, head)
 import Data.Int (toNumber)
-import Data.Either (Either(..), either)
+import Data.Either (Either(..))
 import Data.Function (on)
 import Data.Maybe (Maybe(..), maybe)
-import Data.String (take)
-import Data.StrMap (fromList,fromFoldable,singleton)
+import Data.StrMap (fromFoldable)
 import Data.Tuple (Tuple(..), fst, snd)
 
-import Halogen.HTML as H
-import Halogen.HTML.Properties as P
-import Control.Monad.Eff.JQuery (select)
 import DOM (DOM())
 import DOM.HTML (window)
 import DOM.HTML.Types (htmlDocumentToDocument, readHTMLElement)
 import DOM.HTML.Window (document)
 import DOM.Node.Document (getElementsByClassName)
 import DOM.Node.HTMLCollection (item)
-import Data.Nullable (toMaybe)
 import Data.Foreign (toForeign)
-import Data.Foldable (foldMap)
 
 import Preface ((++))
 import ECharts
 
-import Util
+import Util (pretty, roundTo)
 import Team (short)
 import Tip (Metric(), calculate)
-import Ranking (Ranking())
 import Ratings (Rating())
 import Player (Player())
-
-return = pure
 
 type RenderChartEff e a = Eff (dom :: DOM, echarts :: ECHARTS | e) a
 
@@ -48,11 +39,11 @@ renderRatingsChart aggregated metric playerRatings class_ = do
   elems <- getElementsByClassName class_ (htmlDocumentToDocument d)
   e <- item 0 elems
   case readHTMLElement (toForeign e) of
-    Left _  -> return Nothing
+    Left _  -> pure Nothing
     Right x -> do
       chart <- init Nothing x
       setOption (ratingsOptions aggregated metric playerRatings) true chart
-      return (Just chart)
+      pure (Just chart)
 
 ratingsOptions :: Boolean -> Metric -> Array (Tuple Player (Array Rating)) -> Option
 ratingsOptions aggregated metric playerRatings =
@@ -70,7 +61,7 @@ ratingsOptions aggregated metric playerRatings =
     , xAxis = Just $ OneAxis $ Axis $ axisDefault
       { "type" = Just CategoryAxis
       , "data" = Just $ map CommonAxisData $ if aggregated
-                                                then map show (points ratings)
+                                                then map show (points pRatings)
                                                 else categories
       , splitLine = Just $ AxisSplitLine $ axisSplitLineDefault
         { show = Just false }
@@ -84,13 +75,13 @@ ratingsOptions aggregated metric playerRatings =
     , series = Just $ map (series >>> Just) playerRatings
     }
  where
-  ratings = maybe [] snd (head playerRatings)
+  pRatings = maybe [] snd (head playerRatings)
   points ratings = map (calculate metric 0 >>> roundTo 2) (range 0 (length ratings - 1))
   datum ratings i = toNumber (length (filter (\r -> r.value == i) ratings))
   categories =
     if length playerRatings >= 1
-       then map (\_ -> "") ratings 
-       else map (_.team >>> short) (sortBy (compare `on` _.value) ratings)
+       then map (\_ -> "") pRatings
+       else map (_.team >>> short) (sortBy (compare `on` _.value) pRatings)
   series (Tuple p ratings) =
     BarSeries
       { common: universalSeriesDefault
