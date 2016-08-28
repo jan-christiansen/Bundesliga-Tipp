@@ -8,14 +8,13 @@ import Data.Array (zipWith, range, length, filter, head, uncons, sortBy)
 import Data.Int (toNumber)
 import Data.Either (Either(..), either)
 import Data.Function (on)
-import Data.List (toList)
 import Data.Maybe (Maybe(..), maybe)
 import Data.String (take)
-import Data.StrMap (fromList)
+import Data.StrMap (fromList,fromFoldable,singleton)
 import Data.Tuple (Tuple(..), fst, snd)
 
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Properties as P
+import Halogen.HTML as H
+import Halogen.HTML.Properties as P
 import Control.Monad.Eff.JQuery (select)
 import DOM (DOM())
 import DOM.HTML (window)
@@ -25,7 +24,9 @@ import DOM.Node.Document (getElementsByClassName)
 import DOM.Node.HTMLCollection (item)
 import Data.Nullable (toMaybe)
 import Data.Foreign (toForeign)
+import Data.Foldable (foldMap)
 
+import Preface ((++))
 import ECharts
 
 import Util
@@ -35,8 +36,9 @@ import Ranking (Ranking())
 import Ratings (Rating())
 import Player (Player())
 
+return = pure
 
-type RenderChartEff e a = Eff (dom :: DOM, echartInit :: ECHARTS_INIT, echartSetOption :: ECHARTS_OPTION_SET | e) a
+type RenderChartEff e a = Eff (dom :: DOM, echarts :: ECHARTS | e) a
 
 renderRatingsChart :: forall eff. Boolean -> Metric -> Array (Tuple Player (Array Rating)) -> String
                    -> RenderChartEff eff (Maybe EChart)
@@ -56,12 +58,12 @@ ratingsOptions :: Boolean -> Metric -> Array (Tuple Player (Array Rating)) -> Op
 ratingsOptions aggregated metric playerRatings =
   Option $ optionDefault
     { title = Just $ Title titleDefault
-      { text = Just $ (if aggregated then "Aggregierte " else "") ++ "Punkteverteilung"
+      { text = Nothing --Just $ (if aggregated then "Aggregierte " else "") ++ "Punkteverteilung"
       }
     , legend = Just $ Legend $ legendDefault
       { show = Just true
       , selected = if length playerRatings >= 4
-                      then Just (fromList (toList (map (fst >>> pretty >>> \x -> Tuple x false) playerRatings)))
+                      then Just (fromFoldable (map (\(Tuple p arr) -> Tuple (pretty p) false) playerRatings))
                       else Nothing
       , "data" = Just $ map (fst >>> pretty >>> legendItemDefault) playerRatings
       }

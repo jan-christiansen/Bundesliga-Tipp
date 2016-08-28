@@ -1,7 +1,7 @@
 module Bootstrap.Classes where
 
 
-import qualified Halogen.HTML as H
+import Halogen.HTML as H
 
 
 active :: H.ClassName

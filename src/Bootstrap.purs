@@ -4,11 +4,11 @@ module Bootstrap where
 import Prelude
 import Data.Array (length, zipWith, range)
 import Data.Tuple (Tuple(..))
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Properties as P
-import qualified Halogen.HTML.Events as E
+import Halogen.HTML as H
+import Halogen.HTML.Properties as P
+import Halogen.HTML.Events as E
 
-import qualified Bootstrap.Classes as B
+import Bootstrap.Classes as B
 
 
 nav :: forall i p. H.ClassName -> Array (Tuple (H.HTML p i) Boolean) -> H.HTML p i

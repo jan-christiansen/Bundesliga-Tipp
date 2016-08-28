@@ -7,59 +7,57 @@ import Prelude
 
 import Control.Apply ((*>))
 import Control.Bind ((=<<))
-import Control.Monad.Aff (Aff(), launchAff, later')
+import Control.Monad.Aff (Aff())
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (print)
-import Control.Monad.Free (liftFI)
-import Data.Traversable (for, traverse)
-import Data.Int (toNumber, fromNumber)
-import Data.Array
-import Data.Maybe (Maybe(..), maybe)
-import Data.Either
-import Data.Tuple (Tuple(..))
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Monad.Eff.Class (liftEff)
 
-import Halogen
-import qualified Halogen.Query.StateF as S
-import Halogen.Util (appendToBody)
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Events as E
-import qualified Halogen.HTML.Properties as P
+import Data.Array (length, range, zipWith, (:))
+import Data.Maybe (Maybe(..))
+import Data.Either (Either(..))
+import Data.Tuple (Tuple(..))
+
+import ECharts.Chart as EChart
+import ECharts.Effects (ECHARTS)
+import Halogen ( ComponentDSL, ComponentHTML, Component, HalogenEffects
+               , modify, get, fromAff, fromEff, component, runUI, action )
+import Halogen.Util (awaitBody, runHalogenAff)
+import Halogen.HTML as H
+import Halogen.HTML.Events as E
+import Halogen.HTML.Properties as P
 import DOM (DOM())
 import DOM.Event.EventTarget (eventListener, addEventListener)
-import DOM.Event.EventTypes (readystatechange, load, resize)
-import DOM.Event.Types (Event())
+import DOM.HTML.Event.EventTypes (load, resize)
 import DOM.HTML (window)
-import DOM.HTML.Document (body)
-import DOM.HTML.Types (HTMLElement(), htmlElementToNode, windowToEventTarget)
-import Network.HTTP.Affjax (AJAX(), get)
+import DOM.HTML.Types (windowToEventTarget)
+import Network.HTTP.Affjax (AJAX())
 import Routing (matches)
+import Preface ((++), concat)
 
-import Util
-import Routes
-import Team
-import Player
-import Tip
-import Standings
+import Util (chunks, showNumber, pretty)
+import Routes (Route(..), reverseRoute, routing)
+import Team (Team)
+import Player (Player)
+import Tip (Metric(..), Trend(..), tipsForPlayer)
+import Standings (LeagueTable(..), standings, leagueTable)
 import Ranking (Ranking(), rankingsForStandings)
 import Ratings (Rating(), ratings)
 import Charts (renderRatingsChart)
-import qualified Bootstrap as B
+import Bootstrap as B
 
 
 -- Main Application
 
-type AppEffects = HalogenEffects (ajax :: AJAX)
+type AppEffects = HalogenEffects (ajax :: AJAX, echarts :: ECHARTS)
 
 main :: Eff AppEffects Unit
-main = launchAff $ do
-  app <- runUI ui initialState
-  appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  driver <- runUI ui initialState body
   w <- liftEff window
-  liftEff (onLoad (matches routing $ \_ new -> route app.driver new))
+  liftEff (matches routing $ \_ new -> route driver new)
  where
-  route driver PlayersRoute  = launchAff (driver (action Overview))
-  route driver (TipsRoute p) = launchAff (driver (action (SelectPlayer p)))
+  route driver PlayersRoute  = runHalogenAff (driver (action Overview))
+  route driver (TipsRoute p) = runHalogenAff (driver (action (SelectPlayer p)))
 
 onLoad :: forall eff a. Eff (dom :: DOM | eff) a -> Eff (dom :: DOM | eff) Unit
 onLoad handler = do
@@ -101,10 +99,10 @@ updateMatchday standings day (Players m s) =
   Players m { standings: standings, currentMatchday: day, maxMatchday: s.maxMatchday }
 
 updateMetric :: Metric -> State -> State
-updateMetric _      l@Loading     = l
-updateMetric _      e@(Error _)   = e
-updateMetric metric (Tips p _ s)  = Tips p metric s
-updateMetric metric (Players _ s) = Players metric s
+updateMetric _ l@Loading     = l
+updateMetric _ e@(Error _)   = e
+updateMetric m (Tips p _ s)  = Tips p m s
+updateMetric m (Players _ s) = Players m s
 
 
 initialState :: State
@@ -114,34 +112,34 @@ initialMetric :: Metric
 initialMetric = Manhattan
 
 metric :: State -> Metric
-metric (Tips _ metric _ )  = metric
-metric (Players metric _ ) = metric
-metric _                   = initialMetric
+metric (Tips _ m _ )  = m
+metric (Players m _ ) = m
+metric _              = initialMetric
 
 matchdayState :: forall eff. State -> Aff (ajax :: AJAX | eff) (Either String MatchdayState)
-matchdayState (Tips _ _ state)  = return (Right state)
-matchdayState (Players _ state) = return (Right state)
+matchdayState (Tips _ _ state)  = pure (Right state)
+matchdayState (Players _ state) = pure (Right state)
 matchdayState _ = do
   tableE <- leagueTable Nothing
-  return (do
+  pure (do
     LeagueTable maxDay sts <- tableE
-    return { standings: sts, currentMatchday: maxDay, maxMatchday: maxDay })
+    pure { standings: sts, currentMatchday: maxDay, maxMatchday: maxDay })
 
 
-ui :: forall eff p. Component State Input (Aff AppEffects) p
-ui = component render eval
+ui :: Component State Input (Aff AppEffects)
+ui = component {render, eval}
 
-render :: forall p. Render State Input p
+render :: State -> ComponentHTML Input
 render Loading =
   renderPage [H.h1_ [H.text "Loading Data..."]]
 render (Error text) =
   renderPage [H.text ("An error occurred: " ++ text)]
-render (Players metric s) =
-  let rankings = rankingsForStandings metric s.standings
+render (Players mtrc s) =
+  let rankings = rankingsForStandings mtrc s.standings
   in
   renderPage
     [ renderCurrentTable s.standings
-    , renderMetrics metric
+    , renderMetrics mtrc
     , H.div [ P.class_ (H.className "main-content") ]
             [ H.div [P.class_ (H.className "bs-example")]
                     [ pointsTable rankings ]
@@ -150,39 +148,42 @@ render (Players metric s) =
     , chartDiv2
     ]
  where
-  chartDiv = H.div [P.class_ (H.className "ratings-chart")] []
-  chartDiv2 = H.div [P.class_ (H.className "ratings-chart-2")] []
-render (Tips player metric s) =
+  chartDiv = H.div_ [H.h2_ [H.text "Aggregierte Punkteverteilung"], H.div [P.class_ (H.className "ratings-chart")] []]
+  chartDiv2 = H.div_ [H.h2_ [H.text "Punkteverteilung"], H.div [P.class_ (H.className "ratings-chart-2")] []]
+
+render (Tips player mtrc s) =
   renderPage
     [ renderCurrentTable s.standings
-    , renderMetrics metric
+    , renderMetrics mtrc
     , H.div [P.class_ (H.className "main-content")]
             [ H.div [ P.class_ (H.className "players-nav") ]
                     [ H.h2_ [H.text (pretty player)]
                     , H.a [P.href (reverseRoute PlayersRoute)] [H.text "Zur Übersicht"]
                     ]
             , H.div [P.class_ (H.className "bs-example")]
-                    [ratingsTable (ratings metric (tipsForPlayer player) s.standings)]
+                    [ratingsTable (ratings mtrc (tipsForPlayer player) s.standings)]
             ]
     , chartDiv
     , chartDiv2
     , renderMatchdays s
     ]
  where
-  chartDiv = H.div [P.class_ (H.className "ratings-chart")] []
-  chartDiv2 = H.div [P.class_ (H.className "ratings-chart-2")] []
+  chartDiv = H.div_ [H.h2_ [H.text "Aggregierte Punkteverteilung"], H.div [P.class_ (H.className "ratings-chart")] []]
+  chartDiv2 = H.div_ [H.h2_ [H.text "Punkteverteilung"], H.div [P.class_ (H.className "ratings-chart-2")] []]
 
 
-renderRatingsCharts :: Boolean -> Metric -> Array (Tuple Player (Array Rating)) -> String -> Aff AppEffects Unit
-renderRatingsCharts aggregated metric playerRatings className = liftEff $ do
-  chartM <- renderRatingsChart aggregated metric playerRatings className
+renderRatingsCharts :: forall eff. Boolean -> Metric -> Array (Tuple Player (Array Rating))
+                    -> String -> Eff (dom :: DOM, echarts :: ECHARTS | eff) Unit
+renderRatingsCharts aggregated mtrc playerRatings className = do
+  chartM <- renderRatingsChart aggregated mtrc playerRatings className
   case chartM of
-       Nothing -> return unit
-       Just c  -> onResize (ECharts.Chart.resize c)  
+       Nothing -> pure unit
+       Just c  -> onResize (EChart.resize c)
 
-renderCharts :: State -> Aff AppEffects Unit
-renderCharts Loading = return unit
-renderCharts (Error _) = return unit
+
+renderCharts :: forall eff. State -> Eff (dom :: DOM, echarts :: ECHARTS | eff) Unit
+renderCharts Loading = pure unit
+renderCharts (Error _) = pure unit
 renderCharts s@(Players m mS) =
   let players = map _.player (rankingsForStandings (metric s) mS.standings)
       playerRatings = map (\p -> Tuple p (ratings (metric s) (tipsForPlayer p) mS.standings)) players
@@ -195,45 +196,42 @@ renderCharts s@(Tips p m mS) =
   renderRatingsCharts true (metric s) [playerRating] "ratings-chart"
   renderRatingsCharts false (metric s) [playerRating] "ratings-chart-2"
 
-eval :: Eval Input State Input (Aff AppEffects)
+eval :: Input ~> ComponentDSL State Input (Aff AppEffects)
 eval (Overview next) = do
-  s <- S.get
-  -- S.modify (const Loading)
-  stateE <- liftFI (matchdayState s)
+  s <- get
+  stateE <- fromAff (matchdayState s)
   case stateE of
-    Left text       -> S.modify (\_ -> Error text)
+    Left text       -> modify (\_ -> Error text)
     Right matchdayS -> do
       let newState = Players (metric s) matchdayS
-      S.modify (\_ -> newState)
-      liftFI (renderCharts newState)
+      modify (\_ -> newState)
+      fromEff (renderCharts newState)
   pure next
 eval (SelectPlayer player next) = do
-  s <- S.get
-  -- S.modify (const Loading)
-  stateE <- liftFI (matchdayState s)
+  s <- get
+  stateE <- fromAff (matchdayState s)
   case stateE of
-    Left text       -> S.modify (\_ -> Error text)
+    Left text       -> modify (\_ -> Error text)
     Right matchdayS -> do
       let newState = Tips player (metric s) matchdayS
-      S.modify (\_ -> newState)
-      liftFI (renderCharts newState)
+      modify (\_ -> newState)
+      fromEff (renderCharts newState)
   pure next
 eval (SelectDay day next) = do
-  s <- S.get
-  -- S.modify (const Loading)
-  tableE <- liftFI (leagueTable (Just day))
+  s <- get
+  tableE <- fromAff (leagueTable (Just day))
   case tableE of
-    Left text   -> S.modify (\_ -> Error text)
+    Left text   -> modify (\_ -> Error text)
     Right table -> do
       let newState = updateMatchday (standings table) day s
-      S.modify (\_ -> newState)
-      liftFI (renderCharts newState)
+      modify (\_ -> newState)
+      fromEff (renderCharts newState)
   pure next
-eval (Use metric next) = do
-  s <- S.get
-  let newState = updateMetric metric s
-  S.modify (\_ -> newState)
-  liftFI (renderCharts newState)
+eval (Use mtrc next) = do
+  s <- get
+  let newState = updateMetric mtrc s
+  modify (\_ -> newState)
+  fromEff (renderCharts newState)
   pure next
 
 
@@ -255,15 +253,15 @@ renderMatchdays s =
       (s.currentMatchday==day')
 
 renderMetrics :: forall p. Metric -> H.HTML p (Input Unit)
-renderMetrics metric =
+renderMetrics mtrc =
   B.navTabs
-    [ row "Manhattan" Manhattan 
+    [ row "Manhattan" Manhattan
     , row "Euklid" Euclid
     , row "Wulf" Wulf
     ]
  where
-  row name metric' =
-    Tuple (H.a [ E.onClick (E.input_ (Use metric')) ] [ H.text name ]) (metric==metric')
+  row name mtrc' =
+    Tuple (H.a [ E.onClick (E.input_ (Use mtrc')) ] [ H.text name ]) (mtrc==mtrc')
 
 pointsTable :: forall p. Array Ranking -> H.HTML p (Input Unit)
 pointsTable rankings =
@@ -304,10 +302,10 @@ rowColor dist trend =
 renderCurrentTable :: forall p i. Array Team -> H.HTML p i
 renderCurrentTable standings =
   H.div [P.class_ (H.className "current-table")]
-        (map row (chunks 3 icons) ++
+        (concat (map row (chunks 3 icons))
         [ H.div [P.class_ (H.className "clear")] [] ])
  where
-  row icons = H.div [P.class_ (H.className "current-table-row")] icons
+  row tIcons = H.div [P.class_ (H.className "current-table-row")] tIcons
   icons = map icon standings
   icon team =
     H.div [P.class_ (H.className "team")]

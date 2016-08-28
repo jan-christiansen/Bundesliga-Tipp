@@ -9,10 +9,10 @@ import Data.Either
 import Data.Maybe
 import Data.Tuple
 import Data.Traversable (traverse)
-import qualified Data.Map as M
+import Data.Map as M
 import Network.HTTP.Affjax (AJAX(), defaultRequest, affjax)
 import Network.HTTP.RequestHeader (RequestHeader(..))
-
+import Preface ((++))
 import Team
 
 data LeagueTable = LeagueTable Int (Array Team)
