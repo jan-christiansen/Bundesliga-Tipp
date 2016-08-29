@@ -22,12 +22,12 @@ instance showRoute :: Show Route where
   show = reverseRoute
 
 reverseRoute :: Route -> String
-reverseRoute (PlayersRoute s)  = "#/" ++ seasonLit s
-reverseRoute (TipsRoute s p) = "#/" ++ seasonLit s ++ "/" ++ playerLit p
+reverseRoute (PlayersRoute s)  = "#" ++ seasonLit s
+reverseRoute (TipsRoute s p) = "#" ++ seasonLit s ++ "/" ++ playerLit p
 
 seasonLit :: Season -> String
 seasonLit Season1516 = "2015"
-seasonLit Season1617 = "2016"
+seasonLit Season1617 = ""
 
 routing :: Match Route
 routing =
@@ -36,7 +36,7 @@ routing =
   PlayersRoute <$> routingSeason
 
 routingSeason :: Match Season
-routingSeason = lit "" *>
+routingSeason =
     foldr (<|>) empty (map (\s -> const s <$> lit (seasonLit s)) allSeasons)
 
 routingPlayer :: Match Player
