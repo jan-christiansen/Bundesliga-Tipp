@@ -43734,26 +43734,17 @@ var TipsRoute = (function () {
     };
     return TipsRoute;
 })();
-var seasonLit$prime = function (v) {
+var seasonLit = function (v) {
     if (v instanceof Season.Season1516) {
         return "2015";
     };
     if (v instanceof Season.Season1617) {
         return "";
     };
-    throw new Error("Failed pattern match at Routes line 33, column 1 - line 34, column 1: " + [ v.constructor.name ]);
-};
-var seasonLit = function (v) {
-    if (v instanceof Season.Season1516) {
-        return "2015";
-    };
-    if (v instanceof Season.Season1617) {
-        return "2016";
-    };
     throw new Error("Failed pattern match at Routes line 29, column 1 - line 30, column 1: " + [ v.constructor.name ]);
 };
 var routingSeason = Data_Foldable.foldr(Data_Foldable.foldableArray)(Control_Alt.alt(Routing_Match.matchAlt))(Control_Plus.empty(Routing_Match.matchPlus))(Data_Functor.map(Data_Functor.functorArray)(function (s) {
-    return Data_Functor.map(Routing_Match.matchFunctor)(Data_Function["const"](s))(Routing_Match_Class.lit(Routing_Match.matchMatchClass)(seasonLit$prime(s)));
+    return Data_Functor.map(Routing_Match.matchFunctor)(Data_Function["const"](s))(Routing_Match_Class.lit(Routing_Match.matchMatchClass)(seasonLit(s)));
 })(Season.allSeasons));
 var playerLit = function (v) {
     if (v instanceof Player.JanWulf) {
@@ -43822,16 +43813,16 @@ var playerLit = function (v) {
     if (v instanceof Player.Svenja) {
         return "svenja";
     };
-    throw new Error("Failed pattern match at Routes line 51, column 1 - line 52, column 1: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Routes line 47, column 1 - line 48, column 1: " + [ v.constructor.name ]);
 };
 var reverseRoute = function (v) {
     if (v instanceof PlayersRoute) {
-        return $$String.append("#")(seasonLit$prime(v.value0));
+        return $$String.append("#")(seasonLit(v.value0));
     };
     if (v instanceof TipsRoute) {
         return $$String.append("#")($$String.append(seasonLit(v.value0))($$String.append("/")(playerLit(v.value1))));
     };
-    throw new Error("Failed pattern match at Routes line 25, column 1 - line 25, column 53: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Routes line 25, column 1 - line 25, column 52: " + [ v.constructor.name ]);
 };
 var showRoute = new Data_Show.Show(reverseRoute);
 var routingPlayer = Data_Foldable.foldr(Data_Foldable.foldableArray)(Control_Alt.alt(Routing_Match.matchAlt))(Control_Plus.empty(Routing_Match.matchPlus))(Data_Functor.map(Data_Functor.functorArray)(function (p) {
@@ -43847,7 +43838,6 @@ module.exports = {
     routingPlayer: routingPlayer, 
     routingSeason: routingSeason, 
     seasonLit: seasonLit, 
-    "seasonLit'": seasonLit$prime, 
     showRoute: showRoute
 };
 
