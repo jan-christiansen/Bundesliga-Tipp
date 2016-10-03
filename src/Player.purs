@@ -30,6 +30,8 @@ data Player =
   | Sebastian
   | Stefan
   | Svenja
+  | Frank
+  | Marktwert
 
 instance showPlayer :: Show Player where
   show JanWulf = "JanWulf"
@@ -54,6 +56,8 @@ instance showPlayer :: Show Player where
   show Sebastian = "Sebastian"
   show Stefan = "Stefan"
   show Svenja = "Svenja"
+  show Frank = "Frank"
+  show Marktwert = "Marktwert"
 
 instance prettyPlayer :: Pretty Player where
   pretty JanWulf = "Jan W."
@@ -78,6 +82,8 @@ instance prettyPlayer :: Pretty Player where
   pretty Sebastian = "Sebastian"
   pretty Stefan = "Stefan (alias Ahnungslosertipp)"
   pretty Svenja = "Svenja"
+  pretty Frank = "Frank"
+  pretty Marktwert = "Marktwert zu Saisonbeginn"
 
 
 allPlayers :: Array Player
@@ -104,6 +110,8 @@ allPlayers =
   , Sebastian
   , Stefan
   , Svenja
+  , Frank
+  , Marktwert
   ]
 
 allPlayersForSeason :: Season -> Array Player
@@ -127,11 +135,14 @@ allPlayersForSeason Season1617 =
   [ JanWulf
   , Jan
   , JR
+  , Christoph
   , Johannes
   , Julia
   , Daniel
+  , Mirko
   , Sandra
   , Nikita
+  , Henning
   , Jens
   , Thorsten
   , Torsten
@@ -140,5 +151,7 @@ allPlayersForSeason Season1617 =
   , Sebastian
   , Stefan
   , Svenja
+  , Frank
+  , Marktwert
   ]
            

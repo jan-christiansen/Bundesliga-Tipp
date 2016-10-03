@@ -5,8 +5,6 @@ module Main where
 
 import Prelude
 
-import Control.Apply ((*>))
-import Control.Bind ((=<<))
 import Control.Monad.Aff (Aff())
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (liftEff)
@@ -26,7 +24,7 @@ import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import DOM (DOM())
 import DOM.Event.EventTarget (eventListener, addEventListener)
-import DOM.HTML.Event.EventTypes (load, resize)
+import DOM.HTML.Event.EventTypes (resize)
 import DOM.HTML (window)
 import DOM.HTML.Types (windowToEventTarget)
 import Network.HTTP.Affjax (AJAX())
@@ -58,11 +56,6 @@ main = runHalogenAff do
  where
   route driver (PlayersRoute s) = runHalogenAff (driver (action (Overview s)))
   route driver (TipsRoute s p) = runHalogenAff (driver (action (SelectPlayer s p)))
-
-onLoad :: forall eff a. Eff (dom :: DOM | eff) a -> Eff (dom :: DOM | eff) Unit
-onLoad handler = do
-  w <- window
-  addEventListener load (eventListener (const handler)) false (windowToEventTarget w)
 
 onResize :: forall eff a. Eff (dom :: DOM | eff) a -> Eff (dom :: DOM | eff) Unit
 onResize handler = do
@@ -116,11 +109,21 @@ metric (Tips _ m _ )  = m
 metric (Players m _ ) = m
 metric _              = initialMetric
 
+matchdayStateForSeason :: forall eff. Season
+                       -> Aff (ajax :: AJAX | eff) (Either String MatchdayState)
+matchdayStateForSeason season = do
+  tableE <- fromAff (leagueTable season Nothing)
+  pure (case tableE of
+            Left text -> Left text
+            Right (LeagueTable maxDay sts) -> pure
+                  { standings: sts, currentMatchday: maxDay
+                  , maxMatchday: maxDay, season: season})
+
 matchdayState :: State -> Either String MatchdayState
 matchdayState (Tips _ _ state)  = Right state
 matchdayState (Players _ state) = Right state
-matchdayState (Error s) = Left s
-matchdayState Loading = Left "error: Loading is not possible here"
+matchdayState (Error s)         = Left s
+matchdayState Loading           = Left "Loading: no matchday state"
 
 
 ui :: Component State Input (Aff AppEffects)
@@ -171,10 +174,10 @@ render (Tips player mtrc s) =
   chartDiv2 = H.div_ [H.h2_ [H.text "Punkteverteilung"], H.div [P.class_ (H.className "ratings-chart-2")] []]
 
 
-renderRatingsCharts :: forall eff. Boolean -> Metric -> Array (Tuple Player (Array Rating))
+renderRatingsCharts :: forall eff. Boolean -> Metric -> Array Team -> Array (Tuple Player (Array Rating))
                     -> String -> Eff (dom :: DOM, echarts :: ECHARTS | eff) Unit
-renderRatingsCharts aggregated mtrc playerRatings className = do
-  chartM <- renderRatingsChart aggregated mtrc playerRatings className
+renderRatingsCharts aggregated mtrc standings playerRatings className = do
+  chartM <- renderRatingsChart aggregated mtrc standings playerRatings className
   case chartM of
        Nothing -> pure unit
        Just c  -> onResize (EChart.resize c)
@@ -187,65 +190,39 @@ renderCharts s@(Players m mS) =
   let players = map _.player (rankingsForStandings (metric s) mS.standings mS.season)
       playerRatings = map (\p -> Tuple p (ratings (metric s) (tipsForPlayer mS.season p) mS.standings)) players
   in do
-  renderRatingsCharts true (metric s) playerRatings "ratings-chart"
-  renderRatingsCharts false (metric s) playerRatings "ratings-chart-2"
+  renderRatingsCharts true (metric s) mS.standings playerRatings "ratings-chart"
+  renderRatingsCharts false (metric s) mS.standings playerRatings "ratings-chart-2"
 renderCharts s@(Tips p m mS) =
   let playerRating = Tuple p (ratings (metric s) (tipsForPlayer mS.season p) mS.standings)
   in do
-  renderRatingsCharts true (metric s) [playerRating] "ratings-chart"
-  renderRatingsCharts false (metric s) [playerRating] "ratings-chart-2"
+  renderRatingsCharts true (metric s) mS.standings [playerRating] "ratings-chart"
+  renderRatingsCharts false (metric s) mS.standings [playerRating] "ratings-chart-2"
 
 eval :: Input ~> ComponentDSL State Input (Aff AppEffects)
 eval (Overview season next) = do
   s <- get
-  case matchdayState s of
-    Left text -> do
-      tableE <- fromAff (leagueTable season Nothing)
-      case tableE of
-        Left text' -> modify (\_ -> Error text')
-        Right (LeagueTable maxDay sts) -> do
-         let newState =
-              Players (metric s)
-                      { standings: sts, currentMatchday: maxDay
-                      , maxMatchday: maxDay, season: season}
-         modify (\_ -> newState)
-         fromEff (renderCharts newState)
+  stateE <- fromAff (matchdayStateForSeason season)
+  case stateE of
+    Left text -> modify (\_ -> Error text)
     Right matchdayS -> do
-      if matchdayS.season == season
-       then do
-         let newState = Players (metric s) matchdayS
-         modify (\_ -> newState)
-         fromEff (renderCharts newState)
-       else do
-         tableE <- fromAff (leagueTable season Nothing)
-         case tableE of
-           Left text   -> modify (\_ -> Error text)
-           Right (LeagueTable maxDay sts) -> do
-             let newState =
-                  Players (metric s)
-                          { standings: sts, currentMatchday: maxDay
-                          , maxMatchday: maxDay, season: season}
-             modify (\_ -> newState)
-             fromEff (renderCharts newState)
+      let newState = Players (metric s) matchdayS
+      modify (\_ -> newState)
+      fromEff (renderCharts newState)
   pure next
 eval (SelectPlayer season player next) = do
   s <- get
   case matchdayState s of
     Left text       -> modify (\_ -> Error text)
     Right matchdayS -> do
-      if matchdayS.season == season
-       then do
-         let newState = Tips player (metric s) matchdayS
-         modify (\_ -> newState)
-         fromEff (renderCharts newState)
-       else do
-         tableE <- fromAff (leagueTable season Nothing)
-         case tableE of
-           Left text   -> modify (\_ -> Error text)
-           Right table -> do
-             let newState = updateMatchday (standings table) matchdayS.currentMatchday s
-             modify (\_ -> newState)
-             fromEff (renderCharts newState)
+      newState <- if season == matchdayS.season
+                       then pure (Tips player (metric s) matchdayS)
+                       else do
+                         stateE' <- fromAff (matchdayStateForSeason season)
+                         pure (case stateE' of
+                                 Left text' -> Error text'
+                                 Right matchdayS' -> Tips player (metric s) matchdayS')
+      modify (\_ -> newState)
+      fromEff (renderCharts newState)
   pure next
 eval (SelectDay day next) = do
   s <- get
@@ -291,6 +268,7 @@ renderMetrics mtrc =
     [ row "Manhattan" Manhattan
     , row "Euklid" Euclid
     , row "Wulf" Wulf
+    , row "Fehlstände" Inversions
     ]
  where
   row name mtrc' =

@@ -16,10 +16,10 @@ ratings metric tips standings =
   zipWith rating (range 1 (length tips)) tips
  where
   rating i team =
-    let dist = case fromNumber (rateTip Manhattan standings team i) of
+    let dist = case fromNumber (rateTip tips Manhattan standings team i) of
                     Nothing -> 0 -- HACK!
                     Just i -> i
-        value = rateTip metric standings team i
+        value = rateTip tips metric standings team i
         t = trend standings team i
     in
     { pos: i, team: team, value: value, dist: dist, trend: t }

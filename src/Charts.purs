@@ -24,16 +24,16 @@ import Preface ((++))
 import ECharts
 
 import Util (pretty, roundTo)
-import Team (short)
-import Tip (Metric(), calculate)
-import Ratings (Rating())
+import Team (short, Team)
+import Tip (Metric(), calculate, permutation)
+import Ratings (Rating)
 import Player (Player())
 
 type RenderChartEff e a = Eff (dom :: DOM, echarts :: ECHARTS | e) a
 
-renderRatingsChart :: forall eff. Boolean -> Metric -> Array (Tuple Player (Array Rating)) -> String
+renderRatingsChart :: forall eff. Boolean -> Metric -> Array Team -> Array (Tuple Player (Array Rating)) -> String
                    -> RenderChartEff eff (Maybe EChart)
-renderRatingsChart aggregated metric playerRatings class_ = do
+renderRatingsChart aggregated metric standing playerRatings class_ = do
   w <- window
   d <- document w
   elems <- getElementsByClassName class_ (htmlDocumentToDocument d)
@@ -42,11 +42,12 @@ renderRatingsChart aggregated metric playerRatings class_ = do
     Left _  -> pure Nothing
     Right x -> do
       chart <- init Nothing x
-      setOption (ratingsOptions aggregated metric playerRatings) true chart
+      setOption (ratingsOptions aggregated metric (permutation standing (map _.team pRatings)) playerRatings) true chart
       pure (Just chart)
+ where pRatings = maybe [] snd (head playerRatings) 
 
-ratingsOptions :: Boolean -> Metric -> Array (Tuple Player (Array Rating)) -> Option
-ratingsOptions aggregated metric playerRatings =
+ratingsOptions :: Boolean -> Metric -> Array Int -> Array (Tuple Player (Array Rating)) -> Option
+ratingsOptions aggregated metric perms playerRatings =
   Option $ optionDefault
     { title = Just $ Title titleDefault
       { text = Nothing --Just $ (if aggregated then "Aggregierte " else "") ++ "Punkteverteilung"
@@ -69,14 +70,14 @@ ratingsOptions aggregated metric playerRatings =
     , yAxis = Just $ OneAxis $ Axis $ axisDefault
       { "type" = Just ValueAxis
       , min = Just 0.0
-      , max = if aggregated then Just 6.0 else Just (calculate metric 1 18)
+      , max = if aggregated then Just 6.0 else Just (calculate perms metric 1 18)
       , splitNumber = if aggregated then Just 6.0 else Nothing
       }
     , series = Just $ map (series >>> Just) playerRatings
     }
  where
   pRatings = maybe [] snd (head playerRatings)
-  points ratings = map (calculate metric 0 >>> roundTo 2) (range 0 (length ratings - 1))
+  points ratings = map (calculate perms metric 0 >>> roundTo 2) (range 0 (length ratings - 1))
   datum ratings i = toNumber (length (filter (\r -> r.value == i) ratings))
   categories =
     if length playerRatings >= 1
