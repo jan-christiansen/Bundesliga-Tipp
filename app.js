@@ -187,207 +187,214 @@ var Control_Applicative = require("../Control.Applicative");
 var ECharts_Chart = require("../ECharts.Chart");
 var ratingsOptions = function (aggregated) {
     return function (metric) {
-        return function (playerRatings) {
-            var points = function (ratings) {
-                return Data_Functor.map(Data_Functor.functorArray)(function ($57) {
-                    return Util.roundTo(2)(Tip.calculate(metric)(0)($57));
-                })(Data_Array.range(0)(Data_Array.length(ratings) - 1));
-            };
-            var pRatings = Data_Maybe.maybe([  ])(Data_Tuple.snd)(Data_Array.head(playerRatings));
-            var datum = function (ratings) {
-                return function (i) {
-                    return Data_Int.toNumber(Data_Array.length(Data_Array.filter(function (r) {
-                        return r.value === i;
-                    })(ratings)));
+        return function (perms) {
+            return function (playerRatings) {
+                var points = function (ratings) {
+                    return Data_Functor.map(Data_Functor.functorArray)(function ($58) {
+                        return Util.roundTo(2)(Tip.calculate(perms)(metric)(0)($58));
+                    })(Data_Array.range(0)(Data_Array.length(ratings) - 1));
                 };
-            };
-            var series = function (v) {
-                return new ECharts_Series.BarSeries({
-                    common: (function () {
-                        var $13 = {};
-                        for (var $14 in ECharts_Series.universalSeriesDefault) {
-                            if (ECharts_Series.universalSeriesDefault.hasOwnProperty($14)) {
-                                $13[$14] = ECharts_Series.universalSeriesDefault[$14];
+                var pRatings = Data_Maybe.maybe([  ])(Data_Tuple.snd)(Data_Array.head(playerRatings));
+                var datum = function (ratings) {
+                    return function (i) {
+                        return Data_Int.toNumber(Data_Array.length(Data_Array.filter(function (r) {
+                            return r.value === i;
+                        })(ratings)));
+                    };
+                };
+                var series = function (v) {
+                    return new ECharts_Series.BarSeries({
+                        common: (function () {
+                            var $14 = {};
+                            for (var $15 in ECharts_Series.universalSeriesDefault) {
+                                if (ECharts_Series.universalSeriesDefault.hasOwnProperty($15)) {
+                                    $14[$15] = ECharts_Series.universalSeriesDefault[$15];
+                                };
+                            };
+                            $14.name = new Data_Maybe.Just(Util.pretty(Player.prettyPlayer)(v.value0));
+                            return $14;
+                        })(), 
+                        barSeries: (function () {
+                            var $18 = {};
+                            for (var $19 in ECharts_Series.barSeriesDefault) {
+                                if (ECharts_Series.barSeriesDefault.hasOwnProperty($19)) {
+                                    $18[$19] = ECharts_Series.barSeriesDefault[$19];
+                                };
+                            };
+                            $18.barGap = new Data_Maybe.Just(new ECharts_Common.Pixel(0.0));
+                            $18.barCategoryGap = new Data_Maybe.Just(new ECharts_Common.Pixel(0.0));
+                            $18.data = Data_Function.apply(Data_Maybe.Just.create)((function () {
+                                if (aggregated) {
+                                    return Data_Functor.map(Data_Functor.functorArray)(function ($59) {
+                                        return ECharts_Item_Data.Value.create(ECharts_Item_Value.Simple.create(datum(v.value1)($59)));
+                                    })(points(v.value1));
+                                };
+                                if (!aggregated) {
+                                    return Data_Functor.map(Data_Functor.functorArray)(function ($60) {
+                                        return ECharts_Item_Data.Value.create(ECharts_Item_Value.Simple.create((function (v1) {
+                                            return v1.value;
+                                        })($60)));
+                                    })(Data_Array.sortBy(Data_Function.on(Data_Ord.compare(Data_Ord.ordNumber))(function (v1) {
+                                        return v1.value;
+                                    }))(v.value1));
+                                };
+                                throw new Error("Failed pattern match at Charts line 94, column 20 - line 96, column 109: " + [ aggregated.constructor.name ]);
+                            })());
+                            return $18;
+                        })()
+                    });
+                };
+                var categories = (function () {
+                    var $23 = Data_Array.length(playerRatings) >= 1;
+                    if ($23) {
+                        return Data_Functor.map(Data_Functor.functorArray)(function (v) {
+                            return "";
+                        })(pRatings);
+                    };
+                    if (!$23) {
+                        return Data_Functor.map(Data_Functor.functorArray)(function ($61) {
+                            return Team["short"]((function (v) {
+                                return v.team;
+                            })($61));
+                        })(Data_Array.sortBy(Data_Function.on(Data_Ord.compare(Data_Ord.ordNumber))(function (v) {
+                            return v.value;
+                        }))(pRatings));
+                    };
+                    throw new Error("Failed pattern match at Charts line 83, column 5 - line 85, column 76: " + [ $23.constructor.name ]);
+                })();
+                return Data_Function.apply(ECharts_Options.Option)((function () {
+                    var $47 = {};
+                    for (var $48 in ECharts_Options.optionDefault) {
+                        if (ECharts_Options.optionDefault.hasOwnProperty($48)) {
+                            $47[$48] = ECharts_Options.optionDefault[$48];
+                        };
+                    };
+                    $47.title = Data_Function.apply(Data_Maybe.Just.create)((function () {
+                        var $25 = {};
+                        for (var $26 in ECharts_Title.titleDefault) {
+                            if (ECharts_Title.titleDefault.hasOwnProperty($26)) {
+                                $25[$26] = ECharts_Title.titleDefault[$26];
                             };
                         };
-                        $13.name = new Data_Maybe.Just(Util.pretty(Player.prettyPlayer)(v.value0));
-                        return $13;
-                    })(), 
-                    barSeries: (function () {
-                        var $17 = {};
-                        for (var $18 in ECharts_Series.barSeriesDefault) {
-                            if (ECharts_Series.barSeriesDefault.hasOwnProperty($18)) {
-                                $17[$18] = ECharts_Series.barSeriesDefault[$18];
+                        $25.text = Data_Maybe.Nothing.value;
+                        return $25;
+                    })());
+                    $47.legend = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Legend.Legend)((function () {
+                        var $32 = {};
+                        for (var $33 in ECharts_Legend.legendDefault) {
+                            if (ECharts_Legend.legendDefault.hasOwnProperty($33)) {
+                                $32[$33] = ECharts_Legend.legendDefault[$33];
                             };
                         };
-                        $17.barGap = new Data_Maybe.Just(new ECharts_Common.Pixel(0.0));
-                        $17.barCategoryGap = new Data_Maybe.Just(new ECharts_Common.Pixel(0.0));
-                        $17.data = Data_Function.apply(Data_Maybe.Just.create)((function () {
+                        $32.show = new Data_Maybe.Just(true);
+                        $32.selected = (function () {
+                            var $28 = Data_Array.length(playerRatings) >= 4;
+                            if ($28) {
+                                return new Data_Maybe.Just(Data_StrMap.fromFoldable(Data_Foldable.foldableArray)(Data_Functor.map(Data_Functor.functorArray)(function (v) {
+                                    return new Data_Tuple.Tuple(Util.pretty(Player.prettyPlayer)(v.value0), false);
+                                })(playerRatings)));
+                            };
+                            if (!$28) {
+                                return Data_Maybe.Nothing.value;
+                            };
+                            throw new Error("Failed pattern match at Charts line 57, column 20 - line 59, column 35: " + [ $28.constructor.name ]);
+                        })();
+                        $32.data = Data_Function.apply(Data_Maybe.Just.create)(Data_Functor.map(Data_Functor.functorArray)(function ($62) {
+                            return ECharts_Legend.legendItemDefault(Util.pretty(Player.prettyPlayer)(Data_Tuple.fst($62)));
+                        })(playerRatings));
+                        return $32;
+                    })()));
+                    $47.xAxis = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Axis.OneAxis.create)(Data_Function.apply(ECharts_Axis.Axis)((function () {
+                        var $39 = {};
+                        for (var $40 in ECharts_Axis.axisDefault) {
+                            if (ECharts_Axis.axisDefault.hasOwnProperty($40)) {
+                                $39[$40] = ECharts_Axis.axisDefault[$40];
+                            };
+                        };
+                        $39.type = new Data_Maybe.Just(ECharts_Axis.CategoryAxis.value);
+                        $39.data = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(Data_Functor.map(Data_Functor.functorArray)(ECharts_Axis.CommonAxisData.create))((function () {
                             if (aggregated) {
-                                return Data_Functor.map(Data_Functor.functorArray)(function ($58) {
-                                    return ECharts_Item_Data.Value.create(ECharts_Item_Value.Simple.create(datum(v.value1)($58)));
-                                })(points(v.value1));
+                                return Data_Functor.map(Data_Functor.functorArray)(Data_Show.show(Data_Show.showNumber))(points(pRatings));
                             };
                             if (!aggregated) {
-                                return Data_Functor.map(Data_Functor.functorArray)(function ($59) {
-                                    return ECharts_Item_Data.Value.create(ECharts_Item_Value.Simple.create((function (v1) {
-                                        return v1.value;
-                                    })($59)));
-                                })(Data_Array.sortBy(Data_Function.on(Data_Ord.compare(Data_Ord.ordNumber))(function (v1) {
-                                    return v1.value;
-                                }))(v.value1));
+                                return categories;
                             };
-                            throw new Error("Failed pattern match at Charts line 93, column 20 - line 95, column 109: " + [ aggregated.constructor.name ]);
-                        })());
-                        return $17;
-                    })()
-                });
-            };
-            var categories = (function () {
-                var $22 = Data_Array.length(playerRatings) >= 1;
-                if ($22) {
-                    return Data_Functor.map(Data_Functor.functorArray)(function (v) {
-                        return "";
-                    })(pRatings);
-                };
-                if (!$22) {
-                    return Data_Functor.map(Data_Functor.functorArray)(function ($60) {
-                        return Team["short"]((function (v) {
-                            return v.team;
-                        })($60));
-                    })(Data_Array.sortBy(Data_Function.on(Data_Ord.compare(Data_Ord.ordNumber))(function (v) {
-                        return v.value;
-                    }))(pRatings));
-                };
-                throw new Error("Failed pattern match at Charts line 82, column 5 - line 84, column 76: " + [ $22.constructor.name ]);
-            })();
-            return Data_Function.apply(ECharts_Options.Option)((function () {
-                var $46 = {};
-                for (var $47 in ECharts_Options.optionDefault) {
-                    if (ECharts_Options.optionDefault.hasOwnProperty($47)) {
-                        $46[$47] = ECharts_Options.optionDefault[$47];
-                    };
-                };
-                $46.title = Data_Function.apply(Data_Maybe.Just.create)((function () {
-                    var $24 = {};
-                    for (var $25 in ECharts_Title.titleDefault) {
-                        if (ECharts_Title.titleDefault.hasOwnProperty($25)) {
-                            $24[$25] = ECharts_Title.titleDefault[$25];
+                            throw new Error("Failed pattern match at Charts line 64, column 18 - line 66, column 64: " + [ aggregated.constructor.name ]);
+                        })()));
+                        $39.splitLine = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Axis.AxisSplitLine)((function () {
+                            var $36 = {};
+                            for (var $37 in ECharts_Axis.axisSplitLineDefault) {
+                                if (ECharts_Axis.axisSplitLineDefault.hasOwnProperty($37)) {
+                                    $36[$37] = ECharts_Axis.axisSplitLineDefault[$37];
+                                };
+                            };
+                            $36.show = new Data_Maybe.Just(false);
+                            return $36;
+                        })()));
+                        return $39;
+                    })())));
+                    $47.yAxis = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Axis.OneAxis.create)(Data_Function.apply(ECharts_Axis.Axis)((function () {
+                        var $44 = {};
+                        for (var $45 in ECharts_Axis.axisDefault) {
+                            if (ECharts_Axis.axisDefault.hasOwnProperty($45)) {
+                                $44[$45] = ECharts_Axis.axisDefault[$45];
+                            };
                         };
-                    };
-                    $24.text = Data_Maybe.Nothing.value;
-                    return $24;
-                })());
-                $46.legend = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Legend.Legend)((function () {
-                    var $31 = {};
-                    for (var $32 in ECharts_Legend.legendDefault) {
-                        if (ECharts_Legend.legendDefault.hasOwnProperty($32)) {
-                            $31[$32] = ECharts_Legend.legendDefault[$32];
-                        };
-                    };
-                    $31.show = new Data_Maybe.Just(true);
-                    $31.selected = (function () {
-                        var $27 = Data_Array.length(playerRatings) >= 4;
-                        if ($27) {
-                            return new Data_Maybe.Just(Data_StrMap.fromFoldable(Data_Foldable.foldableArray)(Data_Functor.map(Data_Functor.functorArray)(function (v) {
-                                return new Data_Tuple.Tuple(Util.pretty(Player.prettyPlayer)(v.value0), false);
-                            })(playerRatings)));
-                        };
-                        if (!$27) {
-                            return Data_Maybe.Nothing.value;
-                        };
-                        throw new Error("Failed pattern match at Charts line 56, column 20 - line 58, column 35: " + [ $27.constructor.name ]);
-                    })();
-                    $31.data = Data_Function.apply(Data_Maybe.Just.create)(Data_Functor.map(Data_Functor.functorArray)(function ($61) {
-                        return ECharts_Legend.legendItemDefault(Util.pretty(Player.prettyPlayer)(Data_Tuple.fst($61)));
+                        $44.type = new Data_Maybe.Just(ECharts_Axis.ValueAxis.value);
+                        $44.min = new Data_Maybe.Just(0.0);
+                        $44.max = (function () {
+                            if (aggregated) {
+                                return new Data_Maybe.Just(6.0);
+                            };
+                            if (!aggregated) {
+                                return new Data_Maybe.Just(Tip.calculate(perms)(metric)(1)(18));
+                            };
+                            throw new Error("Failed pattern match at Charts line 73, column 15 - line 73, column 82: " + [ aggregated.constructor.name ]);
+                        })();
+                        $44.splitNumber = (function () {
+                            if (aggregated) {
+                                return new Data_Maybe.Just(6.0);
+                            };
+                            if (!aggregated) {
+                                return Data_Maybe.Nothing.value;
+                            };
+                            throw new Error("Failed pattern match at Charts line 74, column 23 - line 74, column 63: " + [ aggregated.constructor.name ]);
+                        })();
+                        return $44;
+                    })())));
+                    $47.series = Data_Function.apply(Data_Maybe.Just.create)(Data_Functor.map(Data_Functor.functorArray)(function ($63) {
+                        return Data_Maybe.Just.create(series($63));
                     })(playerRatings));
-                    return $31;
-                })()));
-                $46.xAxis = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Axis.OneAxis.create)(Data_Function.apply(ECharts_Axis.Axis)((function () {
-                    var $38 = {};
-                    for (var $39 in ECharts_Axis.axisDefault) {
-                        if (ECharts_Axis.axisDefault.hasOwnProperty($39)) {
-                            $38[$39] = ECharts_Axis.axisDefault[$39];
-                        };
-                    };
-                    $38.type = new Data_Maybe.Just(ECharts_Axis.CategoryAxis.value);
-                    $38.data = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(Data_Functor.map(Data_Functor.functorArray)(ECharts_Axis.CommonAxisData.create))((function () {
-                        if (aggregated) {
-                            return Data_Functor.map(Data_Functor.functorArray)(Data_Show.show(Data_Show.showNumber))(points(pRatings));
-                        };
-                        if (!aggregated) {
-                            return categories;
-                        };
-                        throw new Error("Failed pattern match at Charts line 63, column 18 - line 65, column 64: " + [ aggregated.constructor.name ]);
-                    })()));
-                    $38.splitLine = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Axis.AxisSplitLine)((function () {
-                        var $35 = {};
-                        for (var $36 in ECharts_Axis.axisSplitLineDefault) {
-                            if (ECharts_Axis.axisSplitLineDefault.hasOwnProperty($36)) {
-                                $35[$36] = ECharts_Axis.axisSplitLineDefault[$36];
-                            };
-                        };
-                        $35.show = new Data_Maybe.Just(false);
-                        return $35;
-                    })()));
-                    return $38;
-                })())));
-                $46.yAxis = Data_Function.apply(Data_Maybe.Just.create)(Data_Function.apply(ECharts_Axis.OneAxis.create)(Data_Function.apply(ECharts_Axis.Axis)((function () {
-                    var $43 = {};
-                    for (var $44 in ECharts_Axis.axisDefault) {
-                        if (ECharts_Axis.axisDefault.hasOwnProperty($44)) {
-                            $43[$44] = ECharts_Axis.axisDefault[$44];
-                        };
-                    };
-                    $43.type = new Data_Maybe.Just(ECharts_Axis.ValueAxis.value);
-                    $43.min = new Data_Maybe.Just(0.0);
-                    $43.max = (function () {
-                        if (aggregated) {
-                            return new Data_Maybe.Just(6.0);
-                        };
-                        if (!aggregated) {
-                            return new Data_Maybe.Just(Tip.calculate(metric)(1)(18));
-                        };
-                        throw new Error("Failed pattern match at Charts line 72, column 15 - line 72, column 76: " + [ aggregated.constructor.name ]);
-                    })();
-                    $43.splitNumber = (function () {
-                        if (aggregated) {
-                            return new Data_Maybe.Just(6.0);
-                        };
-                        if (!aggregated) {
-                            return Data_Maybe.Nothing.value;
-                        };
-                        throw new Error("Failed pattern match at Charts line 73, column 23 - line 73, column 63: " + [ aggregated.constructor.name ]);
-                    })();
-                    return $43;
-                })())));
-                $46.series = Data_Function.apply(Data_Maybe.Just.create)(Data_Functor.map(Data_Functor.functorArray)(function ($62) {
-                    return Data_Maybe.Just.create(series($62));
-                })(playerRatings));
-                return $46;
-            })());
+                    return $47;
+                })());
+            };
         };
     };
 };
 var renderRatingsChart = function (aggregated) {
     return function (metric) {
-        return function (playerRatings) {
-            return function (class_) {
-                return function __do() {
-                    var v = DOM_HTML.window();
-                    var v1 = DOM_HTML_Window.document(v)();
-                    var v2 = DOM_Node_Document.getElementsByClassName(class_)(DOM_HTML_Types.htmlDocumentToDocument(v1))();
-                    var v3 = DOM_Node_HTMLCollection.item(0)(v2)();
-                    var $53 = DOM_HTML_Types.readHTMLElement(Data_Foreign.toForeign(v3));
-                    if ($53 instanceof Data_Either.Left) {
-                        return Data_Maybe.Nothing.value;
+        return function (standing) {
+            return function (playerRatings) {
+                return function (class_) {
+                    var pRatings = Data_Maybe.maybe([  ])(Data_Tuple.snd)(Data_Array.head(playerRatings));
+                    return function __do() {
+                        var v = DOM_HTML.window();
+                        var v1 = DOM_HTML_Window.document(v)();
+                        var v2 = DOM_Node_Document.getElementsByClassName(class_)(DOM_HTML_Types.htmlDocumentToDocument(v1))();
+                        var v3 = DOM_Node_HTMLCollection.item(0)(v2)();
+                        var $54 = DOM_HTML_Types.readHTMLElement(Data_Foreign.toForeign(v3));
+                        if ($54 instanceof Data_Either.Left) {
+                            return Data_Maybe.Nothing.value;
+                        };
+                        if ($54 instanceof Data_Either.Right) {
+                            var v4 = ECharts_Chart.init(Data_Maybe.Nothing.value)($54.value0)();
+                            ECharts_Options.setOption(ratingsOptions(aggregated)(metric)(Tip.permutation(standing)(Data_Functor.map(Data_Functor.functorArray)(function (v5) {
+                                return v5.team;
+                            })(pRatings)))(playerRatings))(true)(v4)();
+                            return new Data_Maybe.Just(v4);
+                        };
+                        throw new Error("Failed pattern match at Charts line 41, column 3 - line 46, column 24: " + [ $54.constructor.name ]);
                     };
-                    if ($53 instanceof Data_Either.Right) {
-                        var v4 = ECharts_Chart.init(Data_Maybe.Nothing.value)($53.value0)();
-                        ECharts_Options.setOption(ratingsOptions(aggregated)(metric)(playerRatings))(true)(v4)();
-                        return new Data_Maybe.Just(v4);
-                    };
-                    throw new Error("Failed pattern match at Charts line 41, column 3 - line 46, column 24: " + [ $53.constructor.name ]);
                 };
             };
         };
@@ -41416,8 +41423,6 @@ module.exports = {};
 // Generated by psc version 0.9.3
 "use strict";
 var Prelude = require("../Prelude");
-var Control_Apply = require("../Control.Apply");
-var Control_Bind = require("../Control.Bind");
 var Control_Monad_Aff = require("../Control.Monad.Aff");
 var Control_Monad_Eff = require("../Control.Monad.Eff");
 var Control_Monad_Eff_Class = require("../Control.Monad.Eff.Class");
@@ -41458,12 +41463,13 @@ var Halogen_HTML_Elements = require("../Halogen.HTML.Elements");
 var Data_Eq = require("../Data.Eq");
 var Data_Functor = require("../Data.Functor");
 var $$Array = require("../Array");
+var Control_Bind = require("../Control.Bind");
 var Data_Function = require("../Data.Function");
 var Control_Applicative = require("../Control.Applicative");
 var Data_Unit = require("../Data.Unit");
+var Control_Monad_Aff_Free = require("../Control.Monad.Aff.Free");
 var Control_Monad_Free = require("../Control.Monad.Free");
 var Halogen_Query = require("../Halogen.Query");
-var Control_Monad_Aff_Free = require("../Control.Monad.Aff.Free");
 var Halogen_Query_HalogenF = require("../Halogen.Query.HalogenF");
 var Halogen_Component = require("../Halogen.Component");
 var Halogen_Driver = require("../Halogen.Driver");
@@ -41575,7 +41581,7 @@ var updateMetric = function (v) {
         if (v1 instanceof Players) {
             return new Players(v, v1.value1);
         };
-        throw new Error("Failed pattern match at Main line 103, column 1 - line 103, column 33: " + [ v.constructor.name, v1.constructor.name ]);
+        throw new Error("Failed pattern match at Main line 96, column 1 - line 96, column 33: " + [ v.constructor.name, v1.constructor.name ]);
     };
 };
 var updateMatchday = function (v) {
@@ -41603,7 +41609,7 @@ var updateMatchday = function (v) {
                     season: v2.value1.season
                 });
             };
-            throw new Error("Failed pattern match at Main line 95, column 1 - line 95, column 35: " + [ v.constructor.name, v1.constructor.name, v2.constructor.name ]);
+            throw new Error("Failed pattern match at Main line 88, column 1 - line 88, column 35: " + [ v.constructor.name, v1.constructor.name, v2.constructor.name ]);
         };
     };
 };
@@ -41619,7 +41625,7 @@ var rowColor = function (dist) {
             if (v instanceof Tip.Better) {
                 return "better";
             };
-            throw new Error("Failed pattern match at Main line 333, column 3 - line 333, column 34: " + [ v.constructor.name ]);
+            throw new Error("Failed pattern match at Main line 311, column 3 - line 311, column 34: " + [ v.constructor.name ]);
         };
         var distClass = function (i) {
             return $$String.append("dist-")(Data_Show.show(Data_Show.showInt)(i));
@@ -41638,7 +41644,7 @@ var renderMetrics = function (mtrc) {
             return new Data_Tuple.Tuple(Halogen_HTML_Elements.a([ Halogen_HTML_Events.onClick(Halogen_HTML_Events.input_(Use.create(mtrc$prime))) ])([ Halogen_HTML.text(name) ]), Data_Eq.eq(Tip.eqMetric)(mtrc)(mtrc$prime));
         };
     };
-    return Bootstrap.navTabs([ row("Manhattan")(Tip.Manhattan.value), row("Euklid")(Tip.Euclid.value), row("Wulf")(Tip.Wulf.value) ]);
+    return Bootstrap.navTabs([ row("Manhattan")(Tip.Manhattan.value), row("Euklid")(Tip.Euclid.value), row("Wulf")(Tip.Wulf.value), row("Fehlst\xe4nde")(Tip.Inversions.value) ]);
 };
 var renderMatchdays = function (s) {
     var row = function (day$prime) {
@@ -41692,7 +41698,7 @@ var render = function (v) {
         var chartDiv = Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.h2_([ Halogen_HTML.text("Aggregierte Punkteverteilung") ]), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.class_(Halogen_HTML_Core.className("ratings-chart")) ])([  ]) ]);
         return renderPage([ renderCurrentTable(v.value2.standings), renderMetrics(v.value1), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.class_(Halogen_HTML_Core.className("main-content")) ])([ Halogen_HTML_Elements.div([ Halogen_HTML_Properties.class_(Halogen_HTML_Core.className("players-nav")) ])([ Halogen_HTML_Elements.h2_([ Halogen_HTML.text(Util.pretty(Player.prettyPlayer)(v.value0)) ]), Halogen_HTML_Elements.a([ Halogen_HTML_Properties.href(Routes.reverseRoute(new Routes.PlayersRoute(v.value2.season))) ])([ Halogen_HTML.text("Zur \xdcbersicht") ]) ]), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.class_(Halogen_HTML_Core.className("bs-example")) ])([ ratingsTable(Ratings.ratings(v.value1)(Tip.tipsForPlayer(v.value2.season)(v.value0))(v.value2.standings)) ]) ]), chartDiv, chartDiv2, renderMatchdays(v.value2) ])(new Data_Maybe.Just(v.value2.season));
     };
-    throw new Error("Failed pattern match at Main line 130, column 1 - line 131, column 56: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Main line 133, column 1 - line 134, column 56: " + [ v.constructor.name ]);
 };
 var onResize = function (handler) {
     return function __do() {
@@ -41702,27 +41708,41 @@ var onResize = function (handler) {
 };
 var renderRatingsCharts = function (aggregated) {
     return function (mtrc) {
-        return function (playerRatings) {
-            return function (className) {
-                return function __do() {
-                    var v = Charts.renderRatingsChart(aggregated)(mtrc)(playerRatings)(className)();
-                    if (v instanceof Data_Maybe.Nothing) {
-                        return Data_Unit.unit;
+        return function (standings) {
+            return function (playerRatings) {
+                return function (className) {
+                    return function __do() {
+                        var v = Charts.renderRatingsChart(aggregated)(mtrc)(standings)(playerRatings)(className)();
+                        if (v instanceof Data_Maybe.Nothing) {
+                            return Data_Unit.unit;
+                        };
+                        if (v instanceof Data_Maybe.Just) {
+                            return onResize(ECharts_Chart.resize(v.value0))();
+                        };
+                        throw new Error("Failed pattern match at Main line 181, column 3 - line 183, column 45: " + [ v.constructor.name ]);
                     };
-                    if (v instanceof Data_Maybe.Just) {
-                        return onResize(ECharts_Chart.resize(v.value0))();
-                    };
-                    throw new Error("Failed pattern match at Main line 178, column 3 - line 180, column 45: " + [ v.constructor.name ]);
                 };
             };
         };
     };
 };
-var onLoad = function (handler) {
-    return function __do() {
-        var v = DOM_HTML.window();
-        return DOM_Event_EventTarget.addEventListener(DOM_HTML_Event_EventTypes.load)(DOM_Event_EventTarget.eventListener(Data_Function["const"](handler)))(false)(DOM_HTML_Types.windowToEventTarget(v))();
-    };
+var matchdayStateForSeason = function (season) {
+    return Control_Bind.bind(Control_Monad_Aff.bindAff)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableAff)(Standings.leagueTable(season)(Data_Maybe.Nothing.value)))(function (v) {
+        return Control_Applicative.pure(Control_Monad_Aff.applicativeAff)((function () {
+            if (v instanceof Data_Either.Left) {
+                return new Data_Either.Left(v.value0);
+            };
+            if (v instanceof Data_Either.Right) {
+                return Control_Applicative.pure(Data_Either.applicativeEither)({
+                    standings: v.value0.value1, 
+                    currentMatchday: v.value0.value0, 
+                    maxMatchday: v.value0.value0, 
+                    season: season
+                });
+            };
+            throw new Error("Failed pattern match at Main line 116, column 9 - line 120, column 57: " + [ v.constructor.name ]);
+        })());
+    });
 };
 var matchdayState = function (v) {
     if (v instanceof Tips) {
@@ -41735,9 +41755,9 @@ var matchdayState = function (v) {
         return new Data_Either.Left(v.value0);
     };
     if (v instanceof Loading) {
-        return new Data_Either.Left("error: Loading is not possible here");
+        return new Data_Either.Left("Loading: no matchday state");
     };
-    throw new Error("Failed pattern match at Main line 120, column 1 - line 120, column 46: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Main line 123, column 1 - line 123, column 46: " + [ v.constructor.name ]);
 };
 var initialState = Loading.value;
 var initialMetric = Tip.Manhattan.value;
@@ -41765,89 +41785,88 @@ var renderCharts = function (v) {
             return new Data_Tuple.Tuple(p, Ratings.ratings(metric(v))(Tip.tipsForPlayer(v.value1.season)(p))(v.value1.standings));
         })(players);
         return function __do() {
-            renderRatingsCharts(true)(metric(v))(playerRatings)("ratings-chart")();
-            return renderRatingsCharts(false)(metric(v))(playerRatings)("ratings-chart-2")();
+            renderRatingsCharts(true)(metric(v))(v.value1.standings)(playerRatings)("ratings-chart")();
+            return renderRatingsCharts(false)(metric(v))(v.value1.standings)(playerRatings)("ratings-chart-2")();
         };
     };
     if (v instanceof Tips) {
         var playerRating = new Data_Tuple.Tuple(v.value0, Ratings.ratings(metric(v))(Tip.tipsForPlayer(v.value2.season)(v.value0))(v.value2.standings));
         return function __do() {
-            renderRatingsCharts(true)(metric(v))([ playerRating ])("ratings-chart")();
-            return renderRatingsCharts(false)(metric(v))([ playerRating ])("ratings-chart-2")();
+            renderRatingsCharts(true)(metric(v))(v.value2.standings)([ playerRating ])("ratings-chart")();
+            return renderRatingsCharts(false)(metric(v))(v.value2.standings)([ playerRating ])("ratings-chart-2")();
         };
     };
-    throw new Error("Failed pattern match at Main line 184, column 1 - line 184, column 33: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Main line 187, column 1 - line 187, column 33: " + [ v.constructor.name ]);
 };
 var $$eval = function (v) {
     if (v instanceof Overview) {
         return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v1) {
-            return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
-                var $92 = matchdayState(v1);
-                if ($92 instanceof Data_Either.Left) {
-                    return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Standings.leagueTable(v.value0)(Data_Maybe.Nothing.value)))(function (v2) {
-                        if (v2 instanceof Data_Either.Left) {
-                            return Halogen_Query.modify(function (v3) {
-                                return new $$Error(v2.value0);
-                            });
-                        };
-                        if (v2 instanceof Data_Either.Right) {
-                            var newState = new Players(metric(v1), {
-                                standings: v2.value0.value1, 
-                                currentMatchday: v2.value0.value0, 
-                                maxMatchday: v2.value0.value0, 
-                                season: v.value0
-                            });
-                            return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v3) {
-                                return newState;
-                            }))(function () {
-                                return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(newState));
-                            });
-                        };
-                        throw new Error("Failed pattern match at Main line 204, column 7 - line 212, column 41: " + [ v2.constructor.name ]);
-                    });
-                };
-                if ($92 instanceof Data_Either.Right) {
-                    var $102 = Data_Eq.eq(Season.eqSeason)($92.value0.season)(v.value0);
-                    if ($102) {
-                        var newState = new Players(metric(v1), $92.value0);
-                        return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v2) {
+            return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(matchdayStateForSeason(v.value0)))(function (v2) {
+                return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
+                    if (v2 instanceof Data_Either.Left) {
+                        return Halogen_Query.modify(function (v3) {
+                            return new $$Error(v2.value0);
+                        });
+                    };
+                    if (v2 instanceof Data_Either.Right) {
+                        var newState = new Players(metric(v1), v2.value0);
+                        return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v3) {
                             return newState;
                         }))(function () {
                             return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(newState));
                         });
                     };
-                    if (!$102) {
-                        return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Standings.leagueTable(v.value0)(Data_Maybe.Nothing.value)))(function (v2) {
-                            if (v2 instanceof Data_Either.Left) {
-                                return Halogen_Query.modify(function (v3) {
-                                    return new $$Error(v2.value0);
-                                });
-                            };
-                            if (v2 instanceof Data_Either.Right) {
-                                var newState = new Players(metric(v1), {
-                                    standings: v2.value0.value1, 
-                                    currentMatchday: v2.value0.value0, 
-                                    maxMatchday: v2.value0.value0, 
-                                    season: v.value0
-                                });
-                                return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v3) {
-                                    return newState;
-                                }))(function () {
-                                    return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(newState));
-                                });
-                            };
-                            throw new Error("Failed pattern match at Main line 221, column 10 - line 229, column 45: " + [ v2.constructor.name ]);
-                        });
-                    };
-                    throw new Error("Failed pattern match at Main line 214, column 7 - line 229, column 45: " + [ $102.constructor.name ]);
-                };
-                throw new Error("Failed pattern match at Main line 201, column 3 - line 229, column 45: " + [ $92.constructor.name ]);
-            })())(function () {
-                return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
+                    throw new Error("Failed pattern match at Main line 205, column 3 - line 210, column 38: " + [ v2.constructor.name ]);
+                })())(function () {
+                    return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
+                });
             });
         });
     };
     if (v instanceof SelectPlayer) {
+        return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v1) {
+            return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
+                var $101 = matchdayState(v1);
+                if ($101 instanceof Data_Either.Left) {
+                    return Halogen_Query.modify(function (v2) {
+                        return new $$Error($101.value0);
+                    });
+                };
+                if ($101 instanceof Data_Either.Right) {
+                    return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
+                        var $104 = Data_Eq.eq(Season.eqSeason)(v.value0)($101.value0.season);
+                        if ($104) {
+                            return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(new Tips(v.value1, metric(v1), $101.value0));
+                        };
+                        if (!$104) {
+                            return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(matchdayStateForSeason(v.value0)))(function (v2) {
+                                return Control_Applicative.pure(Control_Monad_Free.freeApplicative)((function () {
+                                    if (v2 instanceof Data_Either.Left) {
+                                        return new $$Error(v2.value0);
+                                    };
+                                    if (v2 instanceof Data_Either.Right) {
+                                        return new Tips(v.value1, metric(v1), v2.value0);
+                                    };
+                                    throw new Error("Failed pattern match at Main line 221, column 32 - line 223, column 87: " + [ v2.constructor.name ]);
+                                })());
+                            });
+                        };
+                        throw new Error("Failed pattern match at Main line 217, column 19 - line 223, column 88: " + [ $104.constructor.name ]);
+                    })())(function (v2) {
+                        return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v3) {
+                            return v2;
+                        }))(function () {
+                            return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(v2));
+                        });
+                    });
+                };
+                throw new Error("Failed pattern match at Main line 214, column 3 - line 225, column 38: " + [ $101.constructor.name ]);
+            })())(function () {
+                return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value2);
+            });
+        });
+    };
+    if (v instanceof SelectDay) {
         return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v1) {
             return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
                 var $116 = matchdayState(v1);
@@ -41857,52 +41876,7 @@ var $$eval = function (v) {
                     });
                 };
                 if ($116 instanceof Data_Either.Right) {
-                    var $119 = Data_Eq.eq(Season.eqSeason)($116.value0.season)(v.value0);
-                    if ($119) {
-                        var newState = new Tips(v.value1, metric(v1), $116.value0);
-                        return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v2) {
-                            return newState;
-                        }))(function () {
-                            return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(newState));
-                        });
-                    };
-                    if (!$119) {
-                        return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Standings.leagueTable(v.value0)(Data_Maybe.Nothing.value)))(function (v2) {
-                            if (v2 instanceof Data_Either.Left) {
-                                return Halogen_Query.modify(function (v3) {
-                                    return new $$Error(v2.value0);
-                                });
-                            };
-                            if (v2 instanceof Data_Either.Right) {
-                                var newState = updateMatchday(Standings.standings(v2.value0))($116.value0.currentMatchday)(v1);
-                                return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (v3) {
-                                    return newState;
-                                }))(function () {
-                                    return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(newState));
-                                });
-                            };
-                            throw new Error("Failed pattern match at Main line 243, column 10 - line 248, column 45: " + [ v2.constructor.name ]);
-                        });
-                    };
-                    throw new Error("Failed pattern match at Main line 236, column 7 - line 248, column 45: " + [ $119.constructor.name ]);
-                };
-                throw new Error("Failed pattern match at Main line 233, column 3 - line 248, column 45: " + [ $116.constructor.name ]);
-            })())(function () {
-                return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value2);
-            });
-        });
-    };
-    if (v instanceof SelectDay) {
-        return Control_Bind.bind(Control_Monad_Free.freeBind)(Halogen_Query.get)(function (v1) {
-            return Control_Bind.bind(Control_Monad_Free.freeBind)((function () {
-                var $132 = matchdayState(v1);
-                if ($132 instanceof Data_Either.Left) {
-                    return Halogen_Query.modify(function (v2) {
-                        return new $$Error($132.value0);
-                    });
-                };
-                if ($132 instanceof Data_Either.Right) {
-                    return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Standings.leagueTable($132.value0.season)(new Data_Maybe.Just(v.value0))))(function (v2) {
+                    return Control_Bind.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromAff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(Standings.leagueTable($116.value0.season)(new Data_Maybe.Just(v.value0))))(function (v2) {
                         if (v2 instanceof Data_Either.Left) {
                             return Halogen_Query.modify(function (v3) {
                                 return new $$Error(v2.value0);
@@ -41916,10 +41890,10 @@ var $$eval = function (v) {
                                 return Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(renderCharts(newState));
                             });
                         };
-                        throw new Error("Failed pattern match at Main line 256, column 7 - line 261, column 41: " + [ v2.constructor.name ]);
+                        throw new Error("Failed pattern match at Main line 233, column 7 - line 238, column 41: " + [ v2.constructor.name ]);
                     });
                 };
-                throw new Error("Failed pattern match at Main line 252, column 3 - line 261, column 41: " + [ $132.constructor.name ]);
+                throw new Error("Failed pattern match at Main line 229, column 3 - line 238, column 41: " + [ $116.constructor.name ]);
             })())(function () {
                 return Control_Applicative.pure(Control_Monad_Free.freeApplicative)(v.value1);
             });
@@ -41937,7 +41911,7 @@ var $$eval = function (v) {
             });
         });
     };
-    throw new Error("Failed pattern match at Main line 199, column 1 - line 230, column 12: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Main line 202, column 1 - line 211, column 12: " + [ v.constructor.name ]);
 };
 var ui = Halogen_Component.component({
     render: render, 
@@ -41952,7 +41926,7 @@ var main = (function () {
             if (v instanceof Routes.TipsRoute) {
                 return Halogen_Util.runHalogenAff(driver(Halogen_Query.action(SelectPlayer.create(v.value0)(v.value1))));
             };
-            throw new Error("Failed pattern match at Main line 59, column 3 - line 59, column 79: " + [ driver.constructor.name, v.constructor.name ]);
+            throw new Error("Failed pattern match at Main line 57, column 3 - line 57, column 79: " + [ driver.constructor.name, v.constructor.name ]);
         };
     };
     return Halogen_Util.runHalogenAff(Control_Bind.bind(Control_Monad_Aff.bindAff)(Halogen_Util.awaitBody)(function (v) {
@@ -41979,8 +41953,8 @@ module.exports = {
     initialState: initialState, 
     main: main, 
     matchdayState: matchdayState, 
+    matchdayStateForSeason: matchdayStateForSeason, 
     metric: metric, 
-    onLoad: onLoad, 
     onResize: onResize, 
     pointsTable: pointsTable, 
     ratingsTable: ratingsTable, 
@@ -41997,7 +41971,7 @@ module.exports = {
     updateMetric: updateMetric
 };
 
-},{"../Array":2,"../Bootstrap":6,"../Charts":7,"../Control.Applicative":10,"../Control.Apply":12,"../Control.Bind":16,"../Control.Monad.Aff":30,"../Control.Monad.Aff.Free":26,"../Control.Monad.Eff":41,"../Control.Monad.Eff.Class":33,"../Control.Monad.Free":45,"../DOM":93,"../DOM.Event.EventTarget":69,"../DOM.HTML":81,"../DOM.HTML.Event.EventTypes":75,"../DOM.HTML.Types":77,"../Data.Array":115,"../Data.Either":138,"../Data.Eq":141,"../Data.Function":162,"../Data.Functor":167,"../Data.Maybe":214,"../Data.Show":248,"../Data.Tuple":264,"../Data.Unit":268,"../ECharts.Chart":275,"../ECharts.Effects":284,"../Halogen":354,"../Halogen.Component":335,"../Halogen.Driver":336,"../Halogen.HTML":346,"../Halogen.HTML.Core":338,"../Halogen.HTML.Elements":339,"../Halogen.HTML.Events":343,"../Halogen.HTML.Properties":344,"../Halogen.Query":352,"../Halogen.Query.HalogenF":350,"../Halogen.Util":353,"../Network.HTTP.Affjax":362,"../Player":372,"../Preface":373,"../Prelude":374,"../Ranking":375,"../Ratings":376,"../Routes":377,"../Routing":384,"../Season":385,"../Standings":386,"../String":388,"../Team":391,"../Tip":392,"../Util":397}],356:[function(require,module,exports){
+},{"../Array":2,"../Bootstrap":6,"../Charts":7,"../Control.Applicative":10,"../Control.Bind":16,"../Control.Monad.Aff":30,"../Control.Monad.Aff.Free":26,"../Control.Monad.Eff":41,"../Control.Monad.Eff.Class":33,"../Control.Monad.Free":45,"../DOM":93,"../DOM.Event.EventTarget":69,"../DOM.HTML":81,"../DOM.HTML.Event.EventTypes":75,"../DOM.HTML.Types":77,"../Data.Array":115,"../Data.Either":138,"../Data.Eq":141,"../Data.Function":162,"../Data.Functor":167,"../Data.Maybe":214,"../Data.Show":248,"../Data.Tuple":264,"../Data.Unit":268,"../ECharts.Chart":275,"../ECharts.Effects":284,"../Halogen":354,"../Halogen.Component":335,"../Halogen.Driver":336,"../Halogen.HTML":346,"../Halogen.HTML.Core":338,"../Halogen.HTML.Elements":339,"../Halogen.HTML.Events":343,"../Halogen.HTML.Properties":344,"../Halogen.Query":352,"../Halogen.Query.HalogenF":350,"../Halogen.Util":353,"../Network.HTTP.Affjax":362,"../Player":372,"../Preface":373,"../Prelude":374,"../Ranking":375,"../Ratings":376,"../Routes":377,"../Routing":384,"../Season":385,"../Standings":386,"../String":388,"../Team":391,"../Tip":392,"../Util":397}],356:[function(require,module,exports){
 "use strict";
 
 // module Math
@@ -43403,6 +43377,20 @@ var Svenja = (function () {
     Svenja.value = new Svenja();
     return Svenja;
 })();
+var Frank = (function () {
+    function Frank() {
+
+    };
+    Frank.value = new Frank();
+    return Frank;
+})();
+var Marktwert = (function () {
+    function Marktwert() {
+
+    };
+    Marktwert.value = new Marktwert();
+    return Marktwert;
+})();
 var showPlayer = new Data_Show.Show(function (v) {
     if (v instanceof JanWulf) {
         return "JanWulf";
@@ -43470,7 +43458,13 @@ var showPlayer = new Data_Show.Show(function (v) {
     if (v instanceof Svenja) {
         return "Svenja";
     };
-    throw new Error("Failed pattern match at Player line 35, column 3 - line 36, column 3: " + [ v.constructor.name ]);
+    if (v instanceof Frank) {
+        return "Frank";
+    };
+    if (v instanceof Marktwert) {
+        return "Marktwert";
+    };
+    throw new Error("Failed pattern match at Player line 37, column 3 - line 38, column 3: " + [ v.constructor.name ]);
 });
 var prettyPlayer = new Util.Pretty(function (v) {
     if (v instanceof JanWulf) {
@@ -43539,18 +43533,24 @@ var prettyPlayer = new Util.Pretty(function (v) {
     if (v instanceof Svenja) {
         return "Svenja";
     };
-    throw new Error("Failed pattern match at Player line 59, column 3 - line 60, column 3: " + [ v.constructor.name ]);
+    if (v instanceof Frank) {
+        return "Frank";
+    };
+    if (v instanceof Marktwert) {
+        return "Marktwert zu Saisonbeginn";
+    };
+    throw new Error("Failed pattern match at Player line 63, column 3 - line 64, column 3: " + [ v.constructor.name ]);
 });
 var allPlayersForSeason = function (v) {
     if (v instanceof Season.Season1516) {
         return [ JanWulf.value, Jan.value, JR.value, Christoph.value, Johannes.value, Julia.value, Daniel.value, Mirko.value, Ulf.value, Sandra.value, Maike.value, Nikita.value, Henning.value, Spiegel.value ];
     };
     if (v instanceof Season.Season1617) {
-        return [ JanWulf.value, Jan.value, JR.value, Johannes.value, Julia.value, Daniel.value, Sandra.value, Nikita.value, Jens.value, Thorsten.value, Torsten.value, Arvid.value, Marcellus.value, Sebastian.value, Stefan.value, Svenja.value ];
+        return [ JanWulf.value, Jan.value, JR.value, Christoph.value, Johannes.value, Julia.value, Daniel.value, Mirko.value, Sandra.value, Nikita.value, Henning.value, Jens.value, Thorsten.value, Torsten.value, Arvid.value, Marcellus.value, Sebastian.value, Stefan.value, Svenja.value, Frank.value, Marktwert.value ];
     };
-    throw new Error("Failed pattern match at Player line 110, column 1 - line 125, column 4: " + [ v.constructor.name ]);
+    throw new Error("Failed pattern match at Player line 118, column 1 - line 133, column 4: " + [ v.constructor.name ]);
 };
-var allPlayers = [ JanWulf.value, Jan.value, JR.value, Christoph.value, Johannes.value, Julia.value, Daniel.value, Mirko.value, Ulf.value, Sandra.value, Maike.value, Nikita.value, Henning.value, Spiegel.value, Jens.value, Thorsten.value, Torsten.value, Arvid.value, Marcellus.value, Sebastian.value, Stefan.value, Svenja.value ];
+var allPlayers = [ JanWulf.value, Jan.value, JR.value, Christoph.value, Johannes.value, Julia.value, Daniel.value, Mirko.value, Ulf.value, Sandra.value, Maike.value, Nikita.value, Henning.value, Spiegel.value, Jens.value, Thorsten.value, Torsten.value, Arvid.value, Marcellus.value, Sebastian.value, Stefan.value, Svenja.value, Frank.value, Marktwert.value ];
 module.exports = {
     JanWulf: JanWulf, 
     Jan: Jan, 
@@ -43574,6 +43574,8 @@ module.exports = {
     Sebastian: Sebastian, 
     Stefan: Stefan, 
     Svenja: Svenja, 
+    Frank: Frank, 
+    Marktwert: Marktwert, 
     allPlayers: allPlayers, 
     allPlayersForSeason: allPlayersForSeason, 
     showPlayer: showPlayer, 
@@ -43667,10 +43669,10 @@ var ratings = function (metric) {
         return function (standings) {
             var rating = function (i) {
                 return function (team) {
-                    var value = Tip.rateTip(metric)(standings)(team)(i);
+                    var value = Tip.rateTip(tips)(metric)(standings)(team)(i);
                     var t = Tip.trend(standings)(team)(i);
                     var dist = (function () {
-                        var $0 = Data_Int.fromNumber(Tip.rateTip(Tip.Manhattan.value)(standings)(team)(i));
+                        var $0 = Data_Int.fromNumber(Tip.rateTip(tips)(Tip.Manhattan.value)(standings)(team)(i));
                         if ($0 instanceof Data_Maybe.Nothing) {
                             return 0;
                         };
@@ -43812,6 +43814,12 @@ var playerLit = function (v) {
     };
     if (v instanceof Player.Svenja) {
         return "svenja";
+    };
+    if (v instanceof Player.Frank) {
+        return "frank";
+    };
+    if (v instanceof Player.Marktwert) {
+        return "marktwert";
     };
     throw new Error("Failed pattern match at Routes line 47, column 1 - line 48, column 1: " + [ v.constructor.name ]);
 };
@@ -45211,6 +45219,7 @@ var Prelude = require("../Prelude");
 var Data_Array = require("../Data.Array");
 var Data_Maybe = require("../Data.Maybe");
 var Data_Int = require("../Data.Int");
+var Data_Tuple = require("../Data.Tuple");
 var Data_Foldable = require("../Data.Foldable");
 var $$Math = require("../Math");
 var Team = require("../Team");
@@ -45220,6 +45229,7 @@ var Data_Eq = require("../Data.Eq");
 var Data_Ring = require("../Data.Ring");
 var Data_Semiring = require("../Data.Semiring");
 var Data_Ord = require("../Data.Ord");
+var Data_Functor = require("../Data.Functor");
 var Better = (function () {
     function Better() {
 
@@ -45262,6 +45272,13 @@ var Wulf = (function () {
     Wulf.value = new Wulf();
     return Wulf;
 })();
+var Inversions = (function () {
+    function Inversions() {
+
+    };
+    Inversions.value = new Inversions();
+    return Inversions;
+})();
 var wulf = function (tip) {
     return function (actual) {
         return $$Math.sqrt($$Math.abs(Data_Int.toNumber(tip) - Data_Int.toNumber(actual)));
@@ -45270,28 +45287,28 @@ var wulf = function (tip) {
 var trend = function (standings) {
     return function (team) {
         return function (pos) {
-            var $6 = Data_Array.elemIndex(Team.eqTeam)(team)(standings);
-            if ($6 instanceof Data_Maybe.Nothing) {
+            var $8 = Data_Array.elemIndex(Team.eqTeam)(team)(standings);
+            if ($8 instanceof Data_Maybe.Nothing) {
                 return Correct.value;
             };
-            if ($6 instanceof Data_Maybe.Just) {
-                var $7 = ($6.value0 + 1 | 0) === pos;
-                if ($7) {
+            if ($8 instanceof Data_Maybe.Just) {
+                var $9 = ($8.value0 + 1 | 0) === pos;
+                if ($9) {
                     return Correct.value;
                 };
-                if (!$7) {
-                    var $8 = ($6.value0 + 1 | 0) < pos;
-                    if ($8) {
+                if (!$9) {
+                    var $10 = ($8.value0 + 1 | 0) < pos;
+                    if ($10) {
                         return Better.value;
                     };
-                    if (!$8) {
+                    if (!$10) {
                         return Worse.value;
                     };
-                    throw new Error("Failed pattern match at Tip line 22, column 46 - line 22, column 79: " + [ $8.constructor.name ]);
+                    throw new Error("Failed pattern match at Tip line 23, column 46 - line 23, column 79: " + [ $10.constructor.name ]);
                 };
-                throw new Error("Failed pattern match at Tip line 22, column 16 - line 22, column 79: " + [ $7.constructor.name ]);
+                throw new Error("Failed pattern match at Tip line 23, column 16 - line 23, column 79: " + [ $9.constructor.name ]);
             };
-            throw new Error("Failed pattern match at Tip line 20, column 3 - line 22, column 79: " + [ $6.constructor.name ]);
+            throw new Error("Failed pattern match at Tip line 21, column 3 - line 23, column 79: " + [ $8.constructor.name ]);
         };
     };
 };
@@ -45305,6 +45322,9 @@ var tipsForPlayer = function (v) {
         };
         if (v instanceof Season.Season1516 && v1 instanceof Player.Christoph) {
             return [ Team.Bayern.value, Team.Gladbach.value, Team.Wolfsburg.value, Team.Leverkusen.value, Team.Schalke.value, Team.Dortmund.value, Team.Hoffenheim.value, Team.Augsburg.value, Team.Bremen.value, Team.Mainz.value, Team.Frankfurt.value, Team.Koeln.value, Team.Hannover.value, Team.Berlin.value, Team.Ingolstadt.value, Team.Hamburg.value, Team.Darmstadt.value, Team.Stuttgart.value ];
+        };
+        if (v instanceof Season.Season1617 && v1 instanceof Player.Christoph) {
+            return [ Team.Wolfsburg.value, Team.Bayern.value, Team.Dortmund.value, Team.Gladbach.value, Team.Hamburg.value, Team.Hoffenheim.value, Team.Leverkusen.value, Team.Schalke.value, Team.Berlin.value, Team.Frankfurt.value, Team.Koeln.value, Team.Mainz.value, Team.Leipzig.value, Team.Ingolstadt.value, Team.Augsburg.value, Team.Bremen.value, Team.Freiburg.value, Team.Darmstadt.value ];
         };
         if (v instanceof Season.Season1516 && v1 instanceof Player.Johannes) {
             return [ Team.Bayern.value, Team.Dortmund.value, Team.Wolfsburg.value, Team.Leverkusen.value, Team.Gladbach.value, Team.Schalke.value, Team.Mainz.value, Team.Augsburg.value, Team.Hoffenheim.value, Team.Bremen.value, Team.Frankfurt.value, Team.Stuttgart.value, Team.Koeln.value, Team.Hamburg.value, Team.Berlin.value, Team.Hannover.value, Team.Darmstadt.value, Team.Ingolstadt.value ];
@@ -45329,6 +45349,9 @@ var tipsForPlayer = function (v) {
         };
         if (v instanceof Season.Season1516 && v1 instanceof Player.Mirko) {
             return [ Team.Wolfsburg.value, Team.Bayern.value, Team.Dortmund.value, Team.Leverkusen.value, Team.Gladbach.value, Team.Schalke.value, Team.Hamburg.value, Team.Augsburg.value, Team.Bremen.value, Team.Berlin.value, Team.Mainz.value, Team.Stuttgart.value, Team.Hoffenheim.value, Team.Ingolstadt.value, Team.Koeln.value, Team.Hannover.value, Team.Frankfurt.value, Team.Darmstadt.value ];
+        };
+        if (v instanceof Season.Season1617 && v1 instanceof Player.Mirko) {
+            return [ Team.Dortmund.value, Team.Bayern.value, Team.Leverkusen.value, Team.Schalke.value, Team.Gladbach.value, Team.Wolfsburg.value, Team.Hamburg.value, Team.Berlin.value, Team.Mainz.value, Team.Koeln.value, Team.Ingolstadt.value, Team.Frankfurt.value, Team.Bremen.value, Team.Leipzig.value, Team.Hoffenheim.value, Team.Augsburg.value, Team.Freiburg.value, Team.Darmstadt.value ];
         };
         if (v instanceof Season.Season1516 && v1 instanceof Player.Julia) {
             return [ Team.Bayern.value, Team.Dortmund.value, Team.Wolfsburg.value, Team.Leverkusen.value, Team.Gladbach.value, Team.Schalke.value, Team.Frankfurt.value, Team.Augsburg.value, Team.Hannover.value, Team.Mainz.value, Team.Darmstadt.value, Team.Stuttgart.value, Team.Hamburg.value, Team.Hoffenheim.value, Team.Bremen.value, Team.Berlin.value, Team.Koeln.value, Team.Ingolstadt.value ];
@@ -45363,6 +45386,9 @@ var tipsForPlayer = function (v) {
         if (v instanceof Season.Season1516 && v1 instanceof Player.Henning) {
             return [ Team.Bayern.value, Team.Dortmund.value, Team.Leverkusen.value, Team.Gladbach.value, Team.Schalke.value, Team.Wolfsburg.value, Team.Hamburg.value, Team.Hoffenheim.value, Team.Stuttgart.value, Team.Augsburg.value, Team.Frankfurt.value, Team.Bremen.value, Team.Mainz.value, Team.Koeln.value, Team.Berlin.value, Team.Hannover.value, Team.Ingolstadt.value, Team.Darmstadt.value ];
         };
+        if (v instanceof Season.Season1617 && v1 instanceof Player.Henning) {
+            return [ Team.Bayern.value, Team.Dortmund.value, Team.Gladbach.value, Team.Leverkusen.value, Team.Wolfsburg.value, Team.Schalke.value, Team.Hamburg.value, Team.Koeln.value, Team.Mainz.value, Team.Leipzig.value, Team.Berlin.value, Team.Frankfurt.value, Team.Ingolstadt.value, Team.Hoffenheim.value, Team.Freiburg.value, Team.Bremen.value, Team.Augsburg.value, Team.Darmstadt.value ];
+        };
         if (v instanceof Season.Season1617 && v1 instanceof Player.Jens) {
             return [ Team.Dortmund.value, Team.Bayern.value, Team.Leverkusen.value, Team.Mainz.value, Team.Schalke.value, Team.Wolfsburg.value, Team.Berlin.value, Team.Freiburg.value, Team.Gladbach.value, Team.Frankfurt.value, Team.Koeln.value, Team.Hoffenheim.value, Team.Bremen.value, Team.Augsburg.value, Team.Ingolstadt.value, Team.Hamburg.value, Team.Darmstadt.value, Team.Leipzig.value ];
         };
@@ -45387,7 +45413,28 @@ var tipsForPlayer = function (v) {
         if (v instanceof Season.Season1617 && v1 instanceof Player.Stefan) {
             return [ Team.Koeln.value, Team.Mainz.value, Team.Leverkusen.value, Team.Dortmund.value, Team.Gladbach.value, Team.Frankfurt.value, Team.Augsburg.value, Team.Bayern.value, Team.Ingolstadt.value, Team.Schalke.value, Team.Hamburg.value, Team.Berlin.value, Team.Leipzig.value, Team.Freiburg.value, Team.Darmstadt.value, Team.Hoffenheim.value, Team.Wolfsburg.value, Team.Bremen.value ];
         };
+        if (v instanceof Season.Season1617 && v1 instanceof Player.Frank) {
+            return [ Team.Bayern.value, Team.Gladbach.value, Team.Dortmund.value, Team.Leverkusen.value, Team.Berlin.value, Team.Schalke.value, Team.Wolfsburg.value, Team.Hoffenheim.value, Team.Ingolstadt.value, Team.Mainz.value, Team.Augsburg.value, Team.Hamburg.value, Team.Freiburg.value, Team.Frankfurt.value, Team.Bremen.value, Team.Koeln.value, Team.Darmstadt.value, Team.Leipzig.value ];
+        };
+        if (v instanceof Season.Season1617 && v1 instanceof Player.Marktwert) {
+            return [ Team.Bayern.value, Team.Dortmund.value, Team.Leverkusen.value, Team.Wolfsburg.value, Team.Schalke.value, Team.Gladbach.value, Team.Hoffenheim.value, Team.Mainz.value, Team.Berlin.value, Team.Hamburg.value, Team.Koeln.value, Team.Bremen.value, Team.Leipzig.value, Team.Frankfurt.value, Team.Augsburg.value, Team.Freiburg.value, Team.Ingolstadt.value, Team.Darmstadt.value ];
+        };
         return [  ];
+    };
+};
+var permutation = function (standings) {
+    return function (tips) {
+        var actualPos = function (team) {
+            var $14 = Data_Array.elemIndex(Team.eqTeam)(team)(standings);
+            if ($14 instanceof Data_Maybe.Nothing) {
+                return 0;
+            };
+            if ($14 instanceof Data_Maybe.Just) {
+                return $14.value0 + 1 | 0;
+            };
+            throw new Error("Failed pattern match at Tip line 87, column 7 - line 91, column 1: " + [ $14.constructor.name ]);
+        };
+        return Data_Functor.map(Data_Functor.functorArray)(actualPos)(tips);
     };
 };
 var normalize = function (v) {
@@ -45401,13 +45448,26 @@ var normalize = function (v) {
         if (v instanceof Wulf) {
             return $$Math.pow(s)(2.0);
         };
-        throw new Error("Failed pattern match at Tip line 45, column 1 - line 45, column 26: " + [ v.constructor.name, s.constructor.name ]);
+        if (v instanceof Inversions) {
+            return s;
+        };
+        throw new Error("Failed pattern match at Tip line 50, column 1 - line 50, column 27: " + [ v.constructor.name, s.constructor.name ]);
     };
 };
 var manhattan = function (tip) {
     return function (actual) {
         return $$Math.abs(Data_Int.toNumber(tip) - Data_Int.toNumber(actual));
     };
+};
+var inversions = function (perm) {
+    var largerBefore = function (x) {
+        return function (i) {
+            return Data_Array.length(Data_Array.filter(function (y) {
+                return x < y;
+            })(Data_Array.take(i)(perm)));
+        };
+    };
+    return Data_Foldable.sum(Data_Foldable.foldableArray)(Data_Semiring.semiringInt)(Data_Array.zipWith(largerBefore)(perm)(Data_Array.range(0)(Data_Array.length(perm))));
 };
 var euclid = function (tip) {
     return function (actual) {
@@ -45425,41 +45485,58 @@ var eqMetric = new Data_Eq.Eq(function (v) {
         if (v instanceof Wulf && v1 instanceof Wulf) {
             return true;
         };
+        if (v instanceof Inversions && v1 instanceof Inversions) {
+            return true;
+        };
         return false;
     };
 });
 var calculate = function (v) {
-    if (v instanceof Manhattan) {
-        return manhattan;
+    return function (v1) {
+        if (v1 instanceof Manhattan) {
+            return manhattan;
+        };
+        if (v1 instanceof Euclid) {
+            return euclid;
+        };
+        if (v1 instanceof Wulf) {
+            return wulf;
+        };
+        if (v1 instanceof Inversions) {
+            return function (j) {
+                return function (i) {
+                    return Data_Int.toNumber(0);
+                };
+            };
+        };
+        throw new Error("Failed pattern match at Tip line 63, column 1 - line 63, column 35: " + [ v.constructor.name, v1.constructor.name ]);
     };
-    if (v instanceof Euclid) {
-        return euclid;
-    };
-    if (v instanceof Wulf) {
-        return wulf;
-    };
-    throw new Error("Failed pattern match at Tip line 57, column 1 - line 57, column 32: " + [ v.constructor.name ]);
 };
-var rateTip = function (metric) {
-    return function (standings) {
-        return function (team) {
-            return function (pos) {
-                var $17 = Data_Array.elemIndex(Team.eqTeam)(team)(standings);
-                if ($17 instanceof Data_Maybe.Nothing) {
-                    return 0.0;
+var rateTip = function (tips) {
+    return function (metric) {
+        return function (standings) {
+            return function (team) {
+                return function (pos) {
+                    var $22 = Data_Array.elemIndex(Team.eqTeam)(team)(standings);
+                    if ($22 instanceof Data_Maybe.Nothing) {
+                        return 0.0;
+                    };
+                    if ($22 instanceof Data_Maybe.Just) {
+                        return calculate(permutation(standings)(tips))(metric)(pos)($22.value0 + 1 | 0);
+                    };
+                    throw new Error("Failed pattern match at Tip line 58, column 3 - line 60, column 71: " + [ $22.constructor.name ]);
                 };
-                if ($17 instanceof Data_Maybe.Just) {
-                    return calculate(metric)(pos)($17.value0 + 1 | 0);
-                };
-                throw new Error("Failed pattern match at Tip line 52, column 3 - line 54, column 42: " + [ $17.constructor.name ]);
             };
         };
     };
 };
-var rateTips = function (metric) {
+var rateTips = function (v) {
     return function (standings) {
         return function (tips) {
-            return normalize(metric)(Data_Foldable.sum(Data_Foldable.foldableArray)(Data_Semiring.semiringNumber)(Data_Array.zipWith(rateTip(metric)(standings))(tips)(Data_Array.range(1)(Data_Array.length(tips)))));
+            if (v instanceof Inversions) {
+                return Data_Int.toNumber(inversions(permutation(standings)(tips)));
+            };
+            return normalize(v)(Data_Foldable.sum(Data_Foldable.foldableArray)(Data_Semiring.semiringNumber)(Data_Array.zipWith(rateTip(tips)(v)(standings))(tips)(Data_Array.range(1)(Data_Array.length(tips)))));
         };
     };
 };
@@ -45476,13 +45553,16 @@ module.exports = {
     Manhattan: Manhattan, 
     Euclid: Euclid, 
     Wulf: Wulf, 
+    Inversions: Inversions, 
     Better: Better, 
     Correct: Correct, 
     Worse: Worse, 
     calculate: calculate, 
     euclid: euclid, 
+    inversions: inversions, 
     manhattan: manhattan, 
     normalize: normalize, 
+    permutation: permutation, 
     ratePlayer: ratePlayer, 
     rateTip: rateTip, 
     rateTips: rateTips, 
@@ -45492,7 +45572,7 @@ module.exports = {
     eqMetric: eqMetric
 };
 
-},{"../Data.Array":115,"../Data.Eq":141,"../Data.Foldable":148,"../Data.Int":179,"../Data.Maybe":214,"../Data.Ord":230,"../Data.Ring":240,"../Data.Semiring":245,"../Math":357,"../Player":372,"../Prelude":374,"../Season":385,"../Team":391}],393:[function(require,module,exports){
+},{"../Data.Array":115,"../Data.Eq":141,"../Data.Foldable":148,"../Data.Functor":167,"../Data.Int":179,"../Data.Maybe":214,"../Data.Ord":230,"../Data.Ring":240,"../Data.Semiring":245,"../Data.Tuple":264,"../Math":357,"../Player":372,"../Prelude":374,"../Season":385,"../Team":391}],393:[function(require,module,exports){
 // Generated by psc version 0.9.3
 "use strict";
 var Proxy3 = (function () {
